@@ -54,17 +54,11 @@ export async function installTtyd(version?: string): Promise<string> {
       }
       core.warning(`MacOS ttyd does not support versioning`)
       await exec.exec('brew', args)
-      break
+      return Promise.resolve('/usr/local/bin/ttyd')
     }
     default: {
       return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`))
     }
-  }
-
-  if (!url && osPlatform !== 'darwin') {
-    return Promise.reject(
-      new Error(`Could not find ttyd ${version} for ${osPlatform}`)
-    )
   }
 
   if (url) {
@@ -72,16 +66,13 @@ export async function installTtyd(version?: string): Promise<string> {
       accept: 'application/octet-stream'
     })
     core.debug(`Downloaded ttyd to ${binPath}`)
+    if (osPlatform === 'linux') {
+      await exec.exec('chmod', ['+x', binPath])
+    }
+    return Promise.resolve(binPath)
   }
 
-  // Install ttyd
-  if (binPath) {
-    await tc.cacheFile(binPath, 'ttyd', 'ttyd', version)
-    await exec.exec('chmod', ['+x', binPath])
-    await exec.exec('mv', [binPath, '/usr/local/bin/ttyd'])
-  }
-
-  return Promise.resolve('/usr/local/bin/ttyd')
+  return Promise.reject(new Error(`Could not install ttyd`))
 }
 
 export async function installTtydBrewHead(): Promise<void> {
