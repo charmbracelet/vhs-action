@@ -8,6 +8,8 @@ import * as github from '@actions/github'
 import * as httpm from '@actions/http-client'
 
 export async function installTtyd(version?: string): Promise<string> {
+  core.info(`Installing ttyd ${version}...`)
+
   const osPlatform = os.platform()
   const token = core.getInput('token')
   const octo = github.getOctokit(token)
@@ -25,7 +27,6 @@ export async function installTtyd(version?: string): Promise<string> {
     return Promise.resolve(cacheFile)
   }
 
-  core.info(`Installing ttyd ${version}...`)
   let binPath: string | undefined
   let url: string | undefined
   let release
@@ -165,7 +166,7 @@ export async function installLatestFfmpeg(): Promise<string> {
 
   const flags: string[] = []
   let url: string | undefined
-  let version = 'latest'
+  const version = 'latest'
   let release
   let extract: (
     file: string,
@@ -221,7 +222,7 @@ export async function installLatestFfmpeg(): Promise<string> {
         'https://evermeet.cx/ffmpeg/info/ffmpeg/release'
       )
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      version = resp.result!.version
+      // version = resp.result!.version
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       url = resp.result!.download.zip.url
       extract = tc.extractZip
