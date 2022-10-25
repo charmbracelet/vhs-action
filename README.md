@@ -1,6 +1,10 @@
 # VHS Action
 
-GitHub Action to run [VHS](https://github.com/charmbracelet/vhs).
+GitHub Action to run [VHS][vhs].
+
+[![welcome to vhs!](vhs.gif)][vhs]
+
+[vhs]: https://github.com/charmbracelet/vhs
 
 ## Inputs
 

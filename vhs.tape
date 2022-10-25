@@ -40,9 +40,9 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output demo.gif
-Output demo.mp4
-Output demo.webm
+Output vhs.gif
+Output vhs.mp4
+Output vhs.webm
 
 Set FontSize 46
 Set Width 1200
