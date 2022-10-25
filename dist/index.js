@@ -117,7 +117,7 @@ function install(version) {
             return Promise.reject(new Error(`Unable to find VHS version ${version} for platform ${platform} and architecture ${arch}`));
         }
         core.info(`Downloading ${dlUrl}...`);
-        const dlPath = yield tc.downloadTool(dlUrl, '', token);
+        const dlPath = yield tc.downloadTool(dlUrl, '', `Bearer ${token}`);
         core.debug(`Downloaded to ${dlPath}`);
         core.info('Extracting VHS...');
         let extPath;
