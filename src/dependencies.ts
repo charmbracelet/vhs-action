@@ -5,6 +5,7 @@ import * as tc from '@actions/tool-cache'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as github from '@actions/github'
+import * as httpm from '@actions/http-client'
 
 export async function installTtyd(version?: string): Promise<string> {
   const token = core.getInput('token')
@@ -125,8 +126,23 @@ export async function installTtydBrewHead(): Promise<void> {
   return Promise.resolve()
 }
 
+interface FfmpegMacOs {
+  name: string
+  url: string
+  version: string
+  download: {
+    '7z': {
+      url: string
+    }
+    zip: {
+      url: string
+    }
+  }
+}
+
 export async function installLatestFfmpeg(): Promise<string> {
   core.info(`Installing latest ffmpeg...`)
+  const http = new httpm.HttpClient('vhs-action')
   const osPlatform = os.platform()
   const cacheDir = tc.find('ffmpeg', 'latest')
   if (cacheDir) {
@@ -138,7 +154,9 @@ export async function installLatestFfmpeg(): Promise<string> {
     )
   }
 
-  let url: string
+  const flags: string[] = []
+  let url: string | undefined
+  let version = 'latest'
   let extract: (
     file: string,
     dest?: string | undefined,
@@ -151,18 +169,35 @@ export async function installLatestFfmpeg(): Promise<string> {
       url =
         'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz'
       extract = tc.extractTar
+      flags.push('xJ', '--strip-components=1')
       break
     }
     case 'win32': {
       // Use https://www.gyan.dev/ffmpeg/builds/ builds
-      url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z'
+      const resp = await http.get(
+        'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z'
+      )
+      if (
+        resp.message.statusCode &&
+        [301, 302, 303].includes(resp.message.statusCode) &&
+        resp.message.headers.location
+      ) {
+        // TODO extract version from location
+        url = resp.message.headers.location
+      }
       extract = tc.extract7z
       break
     }
     case 'darwin': {
       // Use https://evermeet.cx/ffmpeg/ builds
-      url = 'https://evermeet.cx/ffmpeg/getrelease/zip'
-      extract = tc.extractZip
+      const resp = await http.getJson<FfmpegMacOs>(
+        'https://evermeet.cx/ffmpeg/info/ffmpeg/release'
+      )
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      version = resp.result!.version
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      url = resp.result!.download['7z'].url
+      extract = tc.extract7z
       break
     }
     default: {
@@ -174,10 +209,9 @@ export async function installLatestFfmpeg(): Promise<string> {
     const dlPath = await tc.downloadTool(url)
     core.debug(`Downloaded ffmpeg to ${dlPath}`)
     const cachePath = await tc.cacheDir(
-      await extract(dlPath),
+      await extract(dlPath, '', flags),
       'ffmpeg',
-      // FIXME fetch and use the correct version
-      'latest'
+      version
     )
     switch (osPlatform) {
       case 'win32': {

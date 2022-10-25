@@ -47,6 +47,7 @@ const tc = __importStar(__nccwpck_require__(7784));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
+const httpm = __importStar(__nccwpck_require__(6255));
 function installTtyd(version) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -159,6 +160,7 @@ exports.installTtydBrewHead = installTtydBrewHead;
 function installLatestFfmpeg() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing latest ffmpeg...`);
+        const http = new httpm.HttpClient('vhs-action');
         const osPlatform = os.platform();
         const cacheDir = tc.find('ffmpeg', 'latest');
         if (cacheDir) {
@@ -167,7 +169,9 @@ function installLatestFfmpeg() {
             core.addPath(binPath);
             return Promise.resolve(path.join(binPath, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
         }
+        const flags = [];
         let url;
+        let version = 'latest';
         let extract;
         switch (osPlatform) {
             case 'linux': {
@@ -175,18 +179,29 @@ function installLatestFfmpeg() {
                 url =
                     'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
                 extract = tc.extractTar;
+                flags.push('xJ', '--strip-components=1');
                 break;
             }
             case 'win32': {
                 // Use https://www.gyan.dev/ffmpeg/builds/ builds
-                url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z';
+                const resp = yield http.get('https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z');
+                if (resp.message.statusCode &&
+                    [301, 302, 303].includes(resp.message.statusCode) &&
+                    resp.message.headers.location) {
+                    // TODO extract version from location
+                    url = resp.message.headers.location;
+                }
                 extract = tc.extract7z;
                 break;
             }
             case 'darwin': {
                 // Use https://evermeet.cx/ffmpeg/ builds
-                url = 'https://evermeet.cx/ffmpeg/getrelease/zip';
-                extract = tc.extractZip;
+                const resp = yield http.getJson('https://evermeet.cx/ffmpeg/info/ffmpeg/release');
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                version = resp.result.version;
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                url = resp.result.download['7z'].url;
+                extract = tc.extract7z;
                 break;
             }
             default: {
@@ -196,9 +211,7 @@ function installLatestFfmpeg() {
         if (url) {
             const dlPath = yield tc.downloadTool(url);
             core.debug(`Downloaded ffmpeg to ${dlPath}`);
-            const cachePath = yield tc.cacheDir(yield extract(dlPath), 'ffmpeg', 
-            // FIXME fetch and use the correct version
-            'latest');
+            const cachePath = yield tc.cacheDir(yield extract(dlPath, '', flags), 'ffmpeg', version);
             switch (osPlatform) {
                 case 'win32': {
                     const binDir = path.join(cachePath, 'bin');
