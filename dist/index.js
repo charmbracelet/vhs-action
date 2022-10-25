@@ -107,7 +107,7 @@ function installTtyd(version) {
                 core.debug(`MacOS ttyd does not support versioning`);
                 yield exec.exec('brew', args);
                 const cachePath = yield tc.cacheFile('/usr/local/bin/ttyd', 'ttyd', 'ttyd', version);
-                return Promise.resolve(cachePath);
+                return Promise.resolve(path.join(cachePath, 'ttyd'));
             }
             default: {
                 return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
@@ -118,15 +118,15 @@ function installTtyd(version) {
                 accept: 'application/octet-stream'
             });
             core.debug(`Downloaded ttyd to ${binPath}`);
-            binPath = yield tc.cacheFile(binPath, `ttyd${osPlatform === 'win32' ? '.exe' : ''}`, 'ttyd', 
+            const cacheDir = yield tc.cacheFile(binPath, `ttyd${osPlatform === 'win32' ? '.exe' : ''}`, 'ttyd', 
             // FIXME fetch version
             version);
-            core.debug(`Cached ttyd to ${binPath}`);
-            core.addPath(path.dirname(binPath));
+            core.debug(`Cached ttyd in ${cacheDir}`);
+            core.addPath(cacheDir);
             if (['darwin', 'linux'].includes(osPlatform)) {
-                fs.chmodSync(binPath, '755');
+                fs.chmodSync(path.join(cacheDir, 'ttyd'), '755');
             }
-            return Promise.resolve(binPath);
+            return Promise.resolve(path.join(cacheDir, `ttyd${osPlatform === 'win32' ? '.exe' : ''}`));
         }
         return Promise.reject(new Error(`Could not install ttyd`));
     });
@@ -166,6 +166,8 @@ function installLatestFfmpeg() {
         core.info(`Installing latest ffmpeg...`);
         const http = new httpm.HttpClient('vhs-action');
         const osPlatform = os.platform();
+        const token = core.getInput('token');
+        const octo = github.getOctokit(token);
         const cacheDir = tc.find('ffmpeg', 'latest');
         if (cacheDir) {
             core.info(`Found cached version latest`);
@@ -176,31 +178,44 @@ function installLatestFfmpeg() {
         const flags = [];
         let url;
         let version = 'latest';
+        let release;
         let extract;
         switch (osPlatform) {
             case 'linux': {
-                // Use https://johnvansickle.com/ffmpeg/ builds
-                url =
-                    'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
+                // Use https://github.com/BtbN/FFmpeg-Builds builds
+                release = yield octo.rest.repos.getLatestRelease({
+                    owner: 'BtbN',
+                    repo: 'FFmpeg-Builds'
+                });
+                for (const asset of release.data.assets) {
+                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
+                    if (asset.name.startsWith('ffmpeg-n5.1') &&
+                        asset.name.includes('linux64-gpl-5.1') &&
+                        asset.name.endsWith('.tar.xz')) {
+                        url = asset.browser_download_url;
+                        break;
+                    }
+                }
                 extract = tc.extractTar;
                 flags.push('xJ', '--strip-components=1');
                 break;
             }
             case 'win32': {
-                // Use https://www.gyan.dev/ffmpeg/builds/ builds
-                url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z';
-                const resp = yield http.get(url);
-                if (resp.message.statusCode &&
-                    [301, 302, 303].includes(resp.message.statusCode) &&
-                    resp.message.headers.location) {
-                    core.debug(`Redirecting to ${resp.message.headers.location}`);
-                    // TODO extract version from location
-                    url = resp.message.headers.location;
+                // Use https://github.com/BtbN/FFmpeg-Builds builds
+                release = yield octo.rest.repos.getLatestRelease({
+                    owner: 'BtbN',
+                    repo: 'FFmpeg-Builds'
+                });
+                for (const asset of release.data.assets) {
+                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
+                    if (asset.name.startsWith('ffmpeg-n5.1') &&
+                        asset.name.includes('win64-gpl-5.1') &&
+                        asset.name.endsWith('.zip')) {
+                        url = asset.browser_download_url;
+                        break;
+                    }
                 }
-                else {
-                    core.debug(`Using default url`);
-                }
-                extract = tc.extract7z;
+                extract = tc.extractZip;
                 break;
             }
             case 'darwin': {
@@ -222,10 +237,11 @@ function installLatestFfmpeg() {
             core.debug(`Downloaded ffmpeg to ${dlPath}`);
             const cachePath = yield tc.cacheDir(yield extract(dlPath, '', flags), 'ffmpeg', version);
             switch (osPlatform) {
+                case 'linux':
                 case 'win32': {
                     const binDir = path.join(cachePath, 'bin');
                     core.addPath(binDir);
-                    return Promise.resolve(path.join(binDir, 'ffmpeg.exe'));
+                    return Promise.resolve(path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
                 }
                 default: {
                     core.addPath(cachePath);
