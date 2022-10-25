@@ -56,6 +56,12 @@ function installTtyd(version) {
             version = 'latest';
         }
         version = version.replace(/^v/, '');
+        const cacheFile = tc.find('ttyd', version);
+        if (cacheFile) {
+            core.info(`Found cached version ${version}`);
+            core.addPath(path.dirname(cacheFile));
+            return Promise.resolve(cacheFile);
+        }
         core.info(`Installing ttyd ${version}...`);
         const osPlatform = os.platform();
         let binPath;
@@ -96,7 +102,8 @@ function installTtyd(version) {
                 }
                 core.debug(`MacOS ttyd does not support versioning`);
                 yield exec.exec('brew', args);
-                return Promise.resolve('/usr/local/bin/ttyd');
+                const cachePath = yield tc.cacheFile('/usr/local/bin/ttyd', 'ttyd', 'ttyd', version);
+                return Promise.resolve(cachePath);
             }
             default: {
                 return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
@@ -107,15 +114,12 @@ function installTtyd(version) {
                 accept: 'application/octet-stream'
             });
             core.debug(`Downloaded ttyd to ${binPath}`);
-            const dir = path.dirname(binPath);
-            core.debug(`Add ${dir} to PATH`);
-            core.addPath(dir);
+            binPath = yield tc.cacheFile(binPath, `ttyd${osPlatform === 'win32' ? '.exe' : ''}`, 'ttyd', 
+            // FIXME fetch version
+            version);
+            core.addPath(path.dirname(binPath));
             if (osPlatform === 'linux') {
                 fs.chmodSync(binPath, '755');
-                fs.renameSync(binPath, path.join(dir, 'ttyd'));
-            }
-            if (osPlatform === 'win32') {
-                fs.renameSync(binPath, path.join(dir, 'ttyd.exe'));
             }
             return Promise.resolve(binPath);
         }
@@ -156,6 +160,13 @@ function installLatestFfmpeg() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing latest ffmpeg...`);
         const osPlatform = os.platform();
+        const cacheDir = tc.find('ffmpeg', 'latest');
+        if (cacheDir) {
+            core.info(`Found cached version latest`);
+            const binPath = path.join(cacheDir, osPlatform === 'win32' ? 'bin' : '');
+            core.addPath(binPath);
+            return Promise.resolve(path.join(binPath, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
+        }
         let url;
         let extract;
         switch (osPlatform) {
@@ -185,13 +196,18 @@ function installLatestFfmpeg() {
         if (url) {
             const dlPath = yield tc.downloadTool(url);
             core.debug(`Downloaded ffmpeg to ${dlPath}`);
-            const dest = yield extract(dlPath);
+            const cachePath = yield tc.cacheDir(yield extract(dlPath), 'ffmpeg', 
+            // FIXME fetch and use the correct version
+            'latest');
             switch (osPlatform) {
                 case 'win32': {
-                    return Promise.resolve(`${dest}\\bin\\ffmpeg.exe`);
+                    const binDir = path.join(cachePath, 'bin');
+                    core.addPath(binDir);
+                    return Promise.resolve(path.join(binDir, 'ffmpeg.exe'));
                 }
                 default: {
-                    return Promise.resolve(`${dest}/ffmpeg`);
+                    core.addPath(cachePath);
+                    return Promise.resolve(path.join(cachePath, 'ffmpeg'));
                 }
             }
         }
@@ -274,6 +290,7 @@ const path = __importStar(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const tc = __importStar(__nccwpck_require__(7784));
+const cacheName = 'vhs';
 function installDependencies() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing dependencies...`);
@@ -286,6 +303,8 @@ exports.installDependencies = installDependencies;
 function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing VHS ${version}...`);
+        const osPlatform = os.platform();
+        const osArch = os.arch();
         const token = core.getInput('token');
         const octo = github.getOctokit(token);
         let release;
@@ -305,9 +324,13 @@ function install(version) {
             });
         }
         version = release.data.tag_name.replace(/^v/, '');
+        // find cached version
+        const cacheDir = tc.find(cacheName, version);
+        if (cacheDir) {
+            core.info(`Found cached version ${version}`);
+            return Promise.resolve(path.join(cacheDir, osPlatform === 'win32' ? 'vhs.exe' : 'vhs'));
+        }
         core.info(`Downloading VHS ${version}...`);
-        const osPlatform = os.platform();
-        const osArch = os.arch();
         let platform = osPlatform;
         let arch = osArch;
         let ext = 'tar.gz';
@@ -369,11 +392,11 @@ function install(version) {
             extPath = yield tc.extractTar(dlPath);
         }
         core.debug(`Extracted to ${extPath}`);
-        const cachePath = yield tc.cacheDir(extPath, 'vhs-action', version);
+        const cachePath = yield tc.cacheDir(extPath, cacheName, version);
         core.debug(`Cached to ${cachePath}`);
-        const exePath = path.join(cachePath, osPlatform == 'win32' ? 'vhs.exe' : 'vhs');
-        core.debug(`Exe path is ${exePath}`);
-        return Promise.resolve(exePath);
+        const binPath = path.join(cachePath, osPlatform == 'win32' ? 'vhs.exe' : 'vhs');
+        core.debug(`Bin path is ${binPath}`);
+        return Promise.resolve(binPath);
     });
 }
 exports.install = install;

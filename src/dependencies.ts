@@ -13,6 +13,13 @@ export async function installTtyd(version?: string): Promise<string> {
     version = 'latest'
   }
   version = version.replace(/^v/, '')
+  const cacheFile = tc.find('ttyd', version)
+  if (cacheFile) {
+    core.info(`Found cached version ${version}`)
+    core.addPath(path.dirname(cacheFile))
+    return Promise.resolve(cacheFile)
+  }
+
   core.info(`Installing ttyd ${version}...`)
   const osPlatform = os.platform()
   let binPath: string | undefined
@@ -56,7 +63,13 @@ export async function installTtyd(version?: string): Promise<string> {
       }
       core.debug(`MacOS ttyd does not support versioning`)
       await exec.exec('brew', args)
-      return Promise.resolve('/usr/local/bin/ttyd')
+      const cachePath = await tc.cacheFile(
+        '/usr/local/bin/ttyd',
+        'ttyd',
+        'ttyd',
+        version
+      )
+      return Promise.resolve(cachePath)
     }
     default: {
       return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`))
@@ -68,15 +81,16 @@ export async function installTtyd(version?: string): Promise<string> {
       accept: 'application/octet-stream'
     })
     core.debug(`Downloaded ttyd to ${binPath}`)
-    const dir = path.dirname(binPath)
-    core.debug(`Add ${dir} to PATH`)
-    core.addPath(dir)
+    binPath = await tc.cacheFile(
+      binPath,
+      `ttyd${osPlatform === 'win32' ? '.exe' : ''}`,
+      'ttyd',
+      // FIXME fetch version
+      version
+    )
+    core.addPath(path.dirname(binPath))
     if (osPlatform === 'linux') {
       fs.chmodSync(binPath, '755')
-      fs.renameSync(binPath, path.join(dir, 'ttyd'))
-    }
-    if (osPlatform === 'win32') {
-      fs.renameSync(binPath, path.join(dir, 'ttyd.exe'))
     }
     return Promise.resolve(binPath)
   }
@@ -114,6 +128,16 @@ export async function installTtydBrewHead(): Promise<void> {
 export async function installLatestFfmpeg(): Promise<string> {
   core.info(`Installing latest ffmpeg...`)
   const osPlatform = os.platform()
+  const cacheDir = tc.find('ffmpeg', 'latest')
+  if (cacheDir) {
+    core.info(`Found cached version latest`)
+    const binPath = path.join(cacheDir, osPlatform === 'win32' ? 'bin' : '')
+    core.addPath(binPath)
+    return Promise.resolve(
+      path.join(binPath, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`)
+    )
+  }
+
   let url: string
   let extract: (
     file: string,
@@ -149,13 +173,21 @@ export async function installLatestFfmpeg(): Promise<string> {
   if (url) {
     const dlPath = await tc.downloadTool(url)
     core.debug(`Downloaded ffmpeg to ${dlPath}`)
-    const dest = await extract(dlPath)
+    const cachePath = await tc.cacheDir(
+      await extract(dlPath),
+      'ffmpeg',
+      // FIXME fetch and use the correct version
+      'latest'
+    )
     switch (osPlatform) {
       case 'win32': {
-        return Promise.resolve(`${dest}\\bin\\ffmpeg.exe`)
+        const binDir = path.join(cachePath, 'bin')
+        core.addPath(binDir)
+        return Promise.resolve(path.join(binDir, 'ffmpeg.exe'))
       }
       default: {
-        return Promise.resolve(`${dest}/ffmpeg`)
+        core.addPath(cachePath)
+        return Promise.resolve(path.join(cachePath, 'ffmpeg'))
       }
     }
   }
