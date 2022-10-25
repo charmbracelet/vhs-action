@@ -106,8 +106,14 @@ function installTtyd(version) {
                 accept: 'application/octet-stream'
             });
             core.debug(`Downloaded ttyd to ${binPath}`);
+            const dir = path.dirname(binPath);
+            yield exec.exec('cd', [dir]);
             if (osPlatform === 'linux') {
                 yield exec.exec('chmod', ['+x', binPath]);
+                yield exec.exec('mv', [binPath, 'ttyd']);
+            }
+            if (osPlatform === 'win32') {
+                yield exec.exec('move', [binPath, 'ttyd.exe']);
             }
             core.addPath(path.dirname(binPath));
             return Promise.resolve(binPath);
