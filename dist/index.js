@@ -1,6 +1,230 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 6031:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.installFfmpeg = exports.installLatestFfmpeg = exports.installTtydBrewHead = exports.installTtyd = void 0;
+const os = __importStar(__nccwpck_require__(2037));
+const tc = __importStar(__nccwpck_require__(7784));
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+const github = __importStar(__nccwpck_require__(5438));
+function installTtyd(version) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        const token = core.getInput('token');
+        const octo = github.getOctokit(token);
+        if (!version) {
+            version = 'latest';
+        }
+        version = version.replace(/^v/, '');
+        core.info(`Installing ttyd ${version}...`);
+        const osPlatform = os.platform();
+        let binPath;
+        let url;
+        let release;
+        if (version === 'latest') {
+            core.debug('Getting latest release');
+            release = yield octo.rest.repos.getLatestRelease({
+                owner: 'tsl0922',
+                repo: 'ttyd'
+            });
+        }
+        else {
+            core.debug(`Getting release for version ${version}`);
+            release = yield octo.rest.repos.getReleaseByTag({
+                owner: 'tsl0922',
+                repo: 'ttyd',
+                tag: version
+            });
+        }
+        switch (osPlatform) {
+            case 'win32': {
+                url = (_a = release.data.assets.find(asset => asset.name.endsWith('win10.exe'))) === null || _a === void 0 ? void 0 : _a.browser_download_url;
+                core.debug(`Installing ttyd ${version} on Windows from ${url}`);
+                break;
+            }
+            case 'linux': {
+                url = (_b = release.data.assets.find(asset => asset.name.endsWith('x86_64'))) === null || _b === void 0 ? void 0 : _b.browser_download_url;
+                core.debug(`Installing ttyd ${version} on Linux from ${url}`);
+                break;
+            }
+            case 'darwin': {
+                core.debug(`Installing ttyd from HEAD on MacOs`);
+                yield exec.exec('brew', ['update', '--quiet']);
+                const args = ['install', 'ttyd'];
+                if (version === 'latest') {
+                    args.push('--HEAD');
+                }
+                core.warning(`MacOS ttyd does not support versioning`);
+                yield exec.exec('brew', args);
+                break;
+            }
+            default: {
+                return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
+            }
+        }
+        if (!url && osPlatform !== 'darwin') {
+            return Promise.reject(new Error(`Could not find ttyd ${version} for ${osPlatform}`));
+        }
+        if (url) {
+            binPath = yield tc.downloadTool(url, '', `token ${token}`, {
+                accept: 'application/octet-stream'
+            });
+            core.debug(`Downloaded ttyd to ${binPath}`);
+        }
+        // Install ttyd
+        if (binPath) {
+            yield tc.cacheFile(binPath, 'ttyd', 'ttyd', version);
+            yield exec.exec('chmod', ['+x', binPath]);
+            yield exec.exec('mv', [binPath, '/usr/local/bin/ttyd']);
+        }
+        return Promise.resolve('/usr/local/bin/ttyd');
+    });
+}
+exports.installTtyd = installTtyd;
+function installTtydBrewHead() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Install ttyd from source
+        yield exec.exec('git', ['clone', 'https://github.com/tsl0922/ttyd']);
+        yield exec.exec('cd', ['ttyd']);
+        yield exec.exec('brew', ['update', '--quiet']);
+        yield exec.exec('brew', [
+            'install',
+            'cmake',
+            'json-c',
+            'libevent',
+            'libuv',
+            'libwebsockets',
+            'openssl@1.1'
+        ]);
+        yield exec.exec('cmake', [
+            '-S',
+            '.',
+            '-B',
+            'build',
+            '-DOPENSSL_ROOT_DIR=$(brew --prefix)/opt/openssl@1.1/',
+            '-Dlibwebsockets_DIR=$(brew --prefix)/lib/cmake/libwebsockets'
+        ]);
+        yield exec.exec('cmake', ['--build', 'build']);
+        yield exec.exec('cmake', ['--install', 'build']);
+        return Promise.resolve();
+    });
+}
+exports.installTtydBrewHead = installTtydBrewHead;
+function installLatestFfmpeg() {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing latest ffmpeg...`);
+        const osPlatform = os.platform();
+        let url;
+        let extract;
+        switch (osPlatform) {
+            case 'linux': {
+                // Use https://johnvansickle.com/ffmpeg/ builds
+                url =
+                    'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
+                extract = tc.extractTar;
+                break;
+            }
+            case 'win32': {
+                // Use https://www.gyan.dev/ffmpeg/builds/ builds
+                url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z';
+                extract = tc.extract7z;
+                break;
+            }
+            case 'darwin': {
+                // Use https://evermeet.cx/ffmpeg/ builds
+                url = 'https://evermeet.cx/ffmpeg/getrelease/zip';
+                extract = tc.extractZip;
+                break;
+            }
+            default: {
+                return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
+            }
+        }
+        if (url) {
+            const dlPath = yield tc.downloadTool(url);
+            core.debug(`Downloaded ffmpeg to ${dlPath}`);
+            const dest = yield extract(dlPath);
+            switch (osPlatform) {
+                case 'win32': {
+                    return Promise.resolve(`${dest}\\bin\\ffmpeg.exe`);
+                }
+                default: {
+                    return Promise.resolve(`${dest}/ffmpeg`);
+                }
+            }
+        }
+        return Promise.reject(new Error('Failed to install ffmpeg'));
+    });
+}
+exports.installLatestFfmpeg = installLatestFfmpeg;
+function installFfmpeg() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const osPlatform = os.platform();
+        switch (osPlatform) {
+            case 'linux': {
+                yield exec.exec('sudo', ['apt-get', 'update']);
+                yield exec.exec('sudo', ['apt-get', 'install', 'ffmpeg']);
+                break;
+            }
+            case 'win32': {
+                yield exec.exec('choco', ['install', 'ffmpeg']);
+                break;
+            }
+            case 'darwin': {
+                yield exec.exec('brew', ['update', '--quiet']);
+                yield exec.exec('brew', ['install', 'ffmpeg']);
+                break;
+            }
+            default: {
+                return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
+            }
+        }
+        return Promise.resolve();
+    });
+}
+exports.installFfmpeg = installFfmpeg;
+
+
+/***/ }),
+
 /***/ 1480:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -39,14 +263,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.install = void 0;
+exports.install = exports.installDependencies = void 0;
+const deps = __importStar(__nccwpck_require__(6031));
 const os = __importStar(__nccwpck_require__(2037));
 const path = __importStar(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const tc = __importStar(__nccwpck_require__(7784));
+function installDependencies() {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing dependencies...`);
+        yield deps.installTtyd();
+        yield deps.installFfmpeg();
+        return Promise.resolve();
+    });
+}
+exports.installDependencies = installDependencies;
 function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing VHS ${version}...`);
         const token = core.getInput('token');
         const octo = github.getOctokit(token);
         let release;
@@ -188,7 +423,7 @@ function run() {
         try {
             const version = core.getInput('version');
             const path = core.getInput('path');
-            core.info(`Installing VHS ${version}...`);
+            yield intaller.installDependencies();
             const bin = yield intaller.install(version);
             yield exec.exec(`${bin} ${path}`);
         }

@@ -1,10 +1,19 @@
+import * as deps from './dependencies'
 import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as tc from '@actions/tool-cache'
 
+export async function installDependencies(): Promise<void> {
+  core.info(`Installing dependencies...`)
+  await deps.installTtyd()
+  await deps.installFfmpeg()
+  return Promise.resolve()
+}
+
 export async function install(version: string): Promise<string> {
+  core.info(`Installing VHS ${version}...`)
   const token = core.getInput('token')
   const octo = github.getOctokit(token)
   let release

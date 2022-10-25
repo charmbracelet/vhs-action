@@ -6,7 +6,7 @@ async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
     const path = core.getInput('path')
-    core.info(`Installing VHS ${version}...`)
+    await intaller.installDependencies()
     const bin = await intaller.install(version)
 
     await exec.exec(`${bin} ${path}`)
