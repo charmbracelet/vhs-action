@@ -26,8 +26,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Run my action
-        uses: ./
-        with:
-          path: demo.tape
