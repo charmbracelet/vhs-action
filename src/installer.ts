@@ -5,7 +5,8 @@ import * as github from '@actions/github'
 import * as tc from '@actions/tool-cache'
 
 export async function install(version: string): Promise<string> {
-  const octo = github.getOctokit(core.getInput('token'))
+  const token = core.getInput('token')
+  const octo = github.getOctokit(token)
   let release
   if (version === 'latest') {
     core.debug('Getting latest release')
@@ -82,7 +83,7 @@ export async function install(version: string): Promise<string> {
   }
 
   core.info(`Downloading ${dlUrl}...`)
-  const dlPath = await tc.downloadTool(dlUrl)
+  const dlPath = await tc.downloadTool(dlUrl, '', token)
   core.debug(`Downloaded to ${dlPath}`)
 
   core.info('Extracting VHS...')
