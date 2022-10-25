@@ -2,6 +2,20 @@
 
 GitHub Action to run [VHS](https://github.com/charmbracelet/vhs).
 
+## Inputs
+
+### `path`
+
+The path to the VHS tape file. Default `"vhs.tape"`.
+
+### `version`
+
+The version of VHS to use. Default `"latest"`.
+
+### `token`
+
+The GitHub token to use. Default `"${{ github.token }}"`.
+
 ## Example
 
 ```yaml
