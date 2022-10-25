@@ -10,7 +10,7 @@ const cacheName = 'vhs'
 export async function installDependencies(): Promise<void> {
   core.info(`Installing dependencies...`)
   await deps.installTtyd()
-  await deps.installFfmpeg()
+  await deps.installLatestFfmpeg()
   return Promise.resolve()
 }
 

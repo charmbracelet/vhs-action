@@ -295,7 +295,7 @@ function installDependencies() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing dependencies...`);
         yield deps.installTtyd();
-        yield deps.installFfmpeg();
+        yield deps.installLatestFfmpeg();
         return Promise.resolve();
     });
 }
