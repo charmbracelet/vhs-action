@@ -64,7 +64,7 @@ function install(version) {
                 tag: version
             });
         }
-        version = release.data.tag_name.substring(1);
+        version = release.data.tag_name.replace(/^v/, '');
         core.info(`Downloading VHS ${version}...`);
         const osPlatform = os.platform();
         const osArch = os.arch();
@@ -95,6 +95,10 @@ function install(version) {
             case 'win32': {
                 platform = 'Windows';
                 ext = 'zip';
+                break;
+            }
+            case 'linux': {
+                platform = 'Linux';
                 break;
             }
         }
