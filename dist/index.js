@@ -51,6 +51,7 @@ const httpm = __importStar(__nccwpck_require__(6255));
 function installTtyd(version) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing ttyd ${version}...`);
         const osPlatform = os.platform();
         const token = core.getInput('token');
         const octo = github.getOctokit(token);
@@ -67,7 +68,6 @@ function installTtyd(version) {
             core.addPath(path.dirname(cacheFile));
             return Promise.resolve(cacheFile);
         }
-        core.info(`Installing ttyd ${version}...`);
         let binPath;
         let url;
         let release;
@@ -177,7 +177,7 @@ function installLatestFfmpeg() {
         }
         const flags = [];
         let url;
-        let version = 'latest';
+        const version = 'latest';
         let release;
         let extract;
         switch (osPlatform) {
@@ -222,7 +222,7 @@ function installLatestFfmpeg() {
                 // Use https://evermeet.cx/ffmpeg/ builds
                 const resp = yield http.getJson('https://evermeet.cx/ffmpeg/info/ffmpeg/release');
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                version = resp.result.version;
+                // version = resp.result!.version
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 url = resp.result.download.zip.url;
                 extract = tc.extractZip;
