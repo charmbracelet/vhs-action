@@ -51,6 +51,7 @@ const httpm = __importStar(__nccwpck_require__(6255));
 function installTtyd(version) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        const osPlatform = os.platform();
         const token = core.getInput('token');
         const octo = github.getOctokit(token);
         if (!version) {
@@ -60,11 +61,13 @@ function installTtyd(version) {
         const cacheFile = tc.find('ttyd', version);
         if (cacheFile) {
             core.info(`Found cached version ${version}`);
+            if (['darwin', 'linux'].includes(osPlatform)) {
+                fs.chmodSync(cacheFile, '755');
+            }
             core.addPath(path.dirname(cacheFile));
             return Promise.resolve(cacheFile);
         }
         core.info(`Installing ttyd ${version}...`);
-        const osPlatform = os.platform();
         let binPath;
         let url;
         let release;
@@ -118,8 +121,9 @@ function installTtyd(version) {
             binPath = yield tc.cacheFile(binPath, `ttyd${osPlatform === 'win32' ? '.exe' : ''}`, 'ttyd', 
             // FIXME fetch version
             version);
+            core.debug(`Cached ttyd to ${binPath}`);
             core.addPath(path.dirname(binPath));
-            if (osPlatform === 'linux') {
+            if (['darwin', 'linux'].includes(osPlatform)) {
                 fs.chmodSync(binPath, '755');
             }
             return Promise.resolve(binPath);
@@ -184,12 +188,17 @@ function installLatestFfmpeg() {
             }
             case 'win32': {
                 // Use https://www.gyan.dev/ffmpeg/builds/ builds
-                const resp = yield http.get('https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z');
+                url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z';
+                const resp = yield http.get(url);
                 if (resp.message.statusCode &&
                     [301, 302, 303].includes(resp.message.statusCode) &&
                     resp.message.headers.location) {
+                    core.debug(`Redirecting to ${resp.message.headers.location}`);
                     // TODO extract version from location
                     url = resp.message.headers.location;
+                }
+                else {
+                    core.debug(`Using default url`);
                 }
                 extract = tc.extract7z;
                 break;
@@ -200,8 +209,8 @@ function installLatestFfmpeg() {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 version = resp.result.version;
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                url = resp.result.download['7z'].url;
-                extract = tc.extract7z;
+                url = resp.result.download.zip.url;
+                extract = tc.extractZip;
                 break;
             }
             default: {
