@@ -33,23 +33,3 @@ jobs:
         with:
           name: vhs-${{ matrix.os }}
           path: demo.*
-
-  gif:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - uses: ./
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        with:
-          commit_message: Update generated VHS GIF
-          branch: main
-          commit_user_name: vhs-action 📼
-          commit_user_email: actions@github.com
-          commit_author: vhs-action 📼 <actions@github.com>
-          file_pattern: '*.gif'
