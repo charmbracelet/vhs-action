@@ -8,6 +8,7 @@ import * as github from '@actions/github'
 import * as httpm from '@actions/http-client'
 
 export async function installTtyd(version?: string): Promise<string> {
+  const osPlatform = os.platform()
   const token = core.getInput('token')
   const octo = github.getOctokit(token)
   if (!version) {
@@ -17,12 +18,14 @@ export async function installTtyd(version?: string): Promise<string> {
   const cacheFile = tc.find('ttyd', version)
   if (cacheFile) {
     core.info(`Found cached version ${version}`)
+    if (['darwin', 'linux'].includes(osPlatform)) {
+      fs.chmodSync(cacheFile, '755')
+    }
     core.addPath(path.dirname(cacheFile))
     return Promise.resolve(cacheFile)
   }
 
   core.info(`Installing ttyd ${version}...`)
-  const osPlatform = os.platform()
   let binPath: string | undefined
   let url: string | undefined
   let release
@@ -89,8 +92,9 @@ export async function installTtyd(version?: string): Promise<string> {
       // FIXME fetch version
       version
     )
+    core.debug(`Cached ttyd to ${binPath}`)
     core.addPath(path.dirname(binPath))
-    if (osPlatform === 'linux') {
+    if (['darwin', 'linux'].includes(osPlatform)) {
       fs.chmodSync(binPath, '755')
     }
     return Promise.resolve(binPath)
@@ -174,16 +178,18 @@ export async function installLatestFfmpeg(): Promise<string> {
     }
     case 'win32': {
       // Use https://www.gyan.dev/ffmpeg/builds/ builds
-      const resp = await http.get(
-        'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z'
-      )
+      url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z'
+      const resp = await http.get(url)
       if (
         resp.message.statusCode &&
         [301, 302, 303].includes(resp.message.statusCode) &&
         resp.message.headers.location
       ) {
+        core.debug(`Redirecting to ${resp.message.headers.location}`)
         // TODO extract version from location
         url = resp.message.headers.location
+      } else {
+        core.debug(`Using default url`)
       }
       extract = tc.extract7z
       break
@@ -196,8 +202,8 @@ export async function installLatestFfmpeg(): Promise<string> {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       version = resp.result!.version
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      url = resp.result!.download['7z'].url
-      extract = tc.extract7z
+      url = resp.result!.download.zip.url
+      extract = tc.extractZip
       break
     }
     default: {
