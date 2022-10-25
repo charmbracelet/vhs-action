@@ -32,4 +32,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: vhs-${{ matrix.os }}
-          path: demo.*
+          path: vhs.*
