@@ -69,7 +69,7 @@ export async function install(version: string): Promise<string> {
   for (const asset of release.data.assets) {
     core.debug(`Checking asset ${asset.name}`)
     if (asset.name === archiveName) {
-      dlUrl = asset.browser_download_url
+      dlUrl = asset.url
       break
     }
   }
@@ -83,7 +83,9 @@ export async function install(version: string): Promise<string> {
   }
 
   core.info(`Downloading ${dlUrl}...`)
-  const dlPath = await tc.downloadTool(dlUrl, '', `Bearer ${token}`)
+  const dlPath = await tc.downloadTool(dlUrl, '', `token ${token}`, {
+    accept: 'application/octet-stream'
+  })
   core.debug(`Downloaded to ${dlPath}`)
 
   core.info('Extracting VHS...')
