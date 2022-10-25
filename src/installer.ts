@@ -83,7 +83,7 @@ export async function install(version: string): Promise<string> {
   }
 
   core.info(`Downloading ${dlUrl}...`)
-  const dlPath = await tc.downloadTool(dlUrl, '', token)
+  const dlPath = await tc.downloadTool(dlUrl, '', `Bearer ${token}`)
   core.debug(`Downloaded to ${dlPath}`)
 
   core.info('Extracting VHS...')
