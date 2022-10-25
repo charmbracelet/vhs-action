@@ -1,0 +1,32 @@
+name: gif pr commenter
+
+on:
+  pull_request:
+    paths:
+      - '*.tape'
+
+jobs:
+  gif-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: ./
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: devicons/public-upload-to-imgur@v2.2.1
+        id: imgur_step
+        with:
+          path: ./*.gif
+          client_id: ${{ secrets.IMGUR_CLIENT_ID }}
+      - uses: github-actions-up-and-running/pr-comment@v1.0.1
+        if: github.event_name == 'pull_request'
+        env:
+          IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
+          MESSAGE: |
+            ![VHS GIf]({0})
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
