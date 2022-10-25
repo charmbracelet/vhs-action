@@ -41,6 +41,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installFfmpeg = exports.installLatestFfmpeg = exports.installTtydBrewHead = exports.installTtyd = void 0;
 const os = __importStar(__nccwpck_require__(2037));
+const path = __importStar(__nccwpck_require__(1017));
 const tc = __importStar(__nccwpck_require__(7784));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
@@ -108,6 +109,7 @@ function installTtyd(version) {
             if (osPlatform === 'linux') {
                 yield exec.exec('chmod', ['+x', binPath]);
             }
+            core.addPath(path.dirname(binPath));
             return Promise.resolve(binPath);
         }
         return Promise.reject(new Error(`Could not install ttyd`));

@@ -1,4 +1,5 @@
 import * as os from 'os'
+import * as path from 'path'
 import * as tc from '@actions/tool-cache'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
@@ -69,6 +70,7 @@ export async function installTtyd(version?: string): Promise<string> {
     if (osPlatform === 'linux') {
       await exec.exec('chmod', ['+x', binPath])
     }
+    core.addPath(path.dirname(binPath))
     return Promise.resolve(binPath)
   }
 
