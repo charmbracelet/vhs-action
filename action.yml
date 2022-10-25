@@ -1,12 +1,16 @@
 name: 'VHS'
 description: 'Run VHS to render terminal videos'
 inputs:
+  version:
+    description: VHS version
+    default: latest
   path:
-    description: 'tape file path'
-    required: true
+    description: 'The tape file path'
     default: 'vhs.tape'
+  token:
+    description: Used to pull VHS from Github
+    default: ${{ github.token }}
+
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  args:
-    - ${{ inputs.path }}
+  using: 'node16'
+  main: 'dist/index.js'
