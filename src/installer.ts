@@ -5,6 +5,8 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as tc from '@actions/tool-cache'
 
+const cacheName = 'vhs'
+
 export async function installDependencies(): Promise<void> {
   core.info(`Installing dependencies...`)
   await deps.installTtyd()
@@ -14,6 +16,9 @@ export async function installDependencies(): Promise<void> {
 
 export async function install(version: string): Promise<string> {
   core.info(`Installing VHS ${version}...`)
+
+  const osPlatform: string = os.platform()
+  const osArch: string = os.arch()
   const token = core.getInput('token')
   const octo = github.getOctokit(token)
   let release
@@ -33,10 +38,18 @@ export async function install(version: string): Promise<string> {
   }
 
   version = release.data.tag_name.replace(/^v/, '')
+
+  // find cached version
+  const cacheDir = tc.find(cacheName, version)
+  if (cacheDir) {
+    core.info(`Found cached version ${version}`)
+    return Promise.resolve(
+      path.join(cacheDir, osPlatform === 'win32' ? 'vhs.exe' : 'vhs')
+    )
+  }
+
   core.info(`Downloading VHS ${version}...`)
 
-  const osPlatform: string = os.platform()
-  const osArch: string = os.arch()
   let platform = osPlatform
   let arch = osArch
   let ext = 'tar.gz'
@@ -106,14 +119,14 @@ export async function install(version: string): Promise<string> {
   }
   core.debug(`Extracted to ${extPath}`)
 
-  const cachePath: string = await tc.cacheDir(extPath, 'vhs-action', version)
+  const cachePath: string = await tc.cacheDir(extPath, cacheName, version)
   core.debug(`Cached to ${cachePath}`)
 
-  const exePath: string = path.join(
+  const binPath: string = path.join(
     cachePath,
     osPlatform == 'win32' ? 'vhs.exe' : 'vhs'
   )
-  core.debug(`Exe path is ${exePath}`)
+  core.debug(`Bin path is ${binPath}`)
 
-  return Promise.resolve(exePath)
+  return Promise.resolve(binPath)
 }
