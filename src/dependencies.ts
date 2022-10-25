@@ -68,15 +68,19 @@ export async function installTtyd(version?: string): Promise<string> {
     })
     core.debug(`Downloaded ttyd to ${binPath}`)
     const dir = path.dirname(binPath)
-    await exec.exec('cd', [dir])
+    core.debug(`Add ${dir} to PATH`)
+    core.addPath(dir)
     if (osPlatform === 'linux') {
+      const newBinPath = path.join(dir, 'ttyd')
       await exec.exec('chmod', ['+x', binPath])
-      await exec.exec('mv', [binPath, 'ttyd'])
+      await exec.exec('mv', [binPath, newBinPath])
+      binPath = newBinPath
     }
     if (osPlatform === 'win32') {
-      await exec.exec('move', [binPath, 'ttyd.exe'])
+      const newBinPath = path.join(dir, 'ttyd.exe')
+      await exec.exec('move', [binPath, newBinPath])
+      binPath = newBinPath
     }
-    core.addPath(path.dirname(binPath))
     return Promise.resolve(binPath)
   }
 

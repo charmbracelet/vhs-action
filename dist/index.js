@@ -107,15 +107,19 @@ function installTtyd(version) {
             });
             core.debug(`Downloaded ttyd to ${binPath}`);
             const dir = path.dirname(binPath);
-            yield exec.exec('cd', [dir]);
+            core.debug(`Add ${dir} to PATH`);
+            core.addPath(dir);
             if (osPlatform === 'linux') {
+                const newBinPath = path.join(dir, 'ttyd');
                 yield exec.exec('chmod', ['+x', binPath]);
-                yield exec.exec('mv', [binPath, 'ttyd']);
+                yield exec.exec('mv', [binPath, newBinPath]);
+                binPath = newBinPath;
             }
             if (osPlatform === 'win32') {
-                yield exec.exec('move', [binPath, 'ttyd.exe']);
+                const newBinPath = path.join(dir, 'ttyd.exe');
+                yield exec.exec('move', [binPath, newBinPath]);
+                binPath = newBinPath;
             }
-            core.addPath(path.dirname(binPath));
             return Promise.resolve(binPath);
         }
         return Promise.reject(new Error(`Could not install ttyd`));
