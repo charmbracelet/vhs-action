@@ -20,6 +20,7 @@ jobs:
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: stefanzweifel/git-auto-commit-action@v4
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
@@ -34,7 +35,7 @@ jobs:
         id: imgur_step
         with:
           path: ./*.gif
-          client_id: ${{secrets.IMGUR_CLIENT_ID}}
+          client_id: ${{ secrets.IMGUR_CLIENT_ID }}
       - uses: github-actions-up-and-running/pr-comment@v1.0.1
         if: github.event_name == 'pull_request'
         env:
@@ -43,4 +44,4 @@ jobs:
             ![VHS GIf]({0})
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{format(env.MESSAGE, env.IMG_URL)}}  # add the url into the string
+          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
