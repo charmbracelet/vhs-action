@@ -47,7 +47,8 @@ const github = __importStar(__nccwpck_require__(5438));
 const tc = __importStar(__nccwpck_require__(7784));
 function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const octo = github.getOctokit(core.getInput('token'));
+        const token = core.getInput('token');
+        const octo = github.getOctokit(token);
         let release;
         if (version === 'latest') {
             core.debug('Getting latest release');
@@ -116,7 +117,7 @@ function install(version) {
             return Promise.reject(new Error(`Unable to find VHS version ${version} for platform ${platform} and architecture ${arch}`));
         }
         core.info(`Downloading ${dlUrl}...`);
-        const dlPath = yield tc.downloadTool(dlUrl);
+        const dlPath = yield tc.downloadTool(dlUrl, '', token);
         core.debug(`Downloaded to ${dlPath}`);
         core.info('Extracting VHS...');
         let extPath;
