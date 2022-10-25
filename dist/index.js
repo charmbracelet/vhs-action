@@ -109,7 +109,7 @@ function install(version) {
         for (const asset of release.data.assets) {
             core.debug(`Checking asset ${asset.name}`);
             if (asset.name === archiveName) {
-                dlUrl = asset.browser_download_url;
+                dlUrl = asset.url;
                 break;
             }
         }
@@ -117,7 +117,9 @@ function install(version) {
             return Promise.reject(new Error(`Unable to find VHS version ${version} for platform ${platform} and architecture ${arch}`));
         }
         core.info(`Downloading ${dlUrl}...`);
-        const dlPath = yield tc.downloadTool(dlUrl, '', `Bearer ${token}`);
+        const dlPath = yield tc.downloadTool(dlUrl, '', `token ${token}`, {
+            accept: 'application/octet-stream'
+        });
         core.debug(`Downloaded to ${dlPath}`);
         core.info('Extracting VHS...');
         let extPath;
