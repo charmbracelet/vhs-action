@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'releases/v*'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
+      - 'releases/v*'
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: ./
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: vhs
+          path: demo.*
