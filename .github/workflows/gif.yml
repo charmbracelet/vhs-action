@@ -4,9 +4,6 @@ on:
   push:
     paths:
       - '*.tape'
-  pull_request:
-    paths:
-      - '*.tape'
   workflow_dispatch:
 
 jobs:
@@ -30,18 +27,3 @@ jobs:
           commit_user_email: actions@github.com
           commit_author: vhs-action 📼 <actions@github.com>
           file_pattern: '*.gif'
-      - uses: devicons/public-upload-to-imgur@v2.2.1
-        if: github.event_name == 'pull_request'
-        id: imgur_step
-        with:
-          path: ./*.gif
-          client_id: ${{ secrets.IMGUR_CLIENT_ID }}
-      - uses: github-actions-up-and-running/pr-comment@v1.0.1
-        if: github.event_name == 'pull_request'
-        env:
-          IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
-          MESSAGE: |
-            ![VHS GIf]({0})
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
