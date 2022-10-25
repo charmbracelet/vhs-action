@@ -117,7 +117,12 @@ function installTtyd(version) {
             }
             if (osPlatform === 'win32') {
                 const newBinPath = path.join(dir, 'ttyd.exe');
-                yield exec.exec('move', [binPath, newBinPath]);
+                yield exec.exec('Move-Item', [
+                    '-Path',
+                    binPath,
+                    '-Destination',
+                    newBinPath
+                ]);
                 binPath = newBinPath;
             }
             return Promise.resolve(binPath);

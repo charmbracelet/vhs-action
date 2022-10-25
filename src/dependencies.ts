@@ -78,7 +78,12 @@ export async function installTtyd(version?: string): Promise<string> {
     }
     if (osPlatform === 'win32') {
       const newBinPath = path.join(dir, 'ttyd.exe')
-      await exec.exec('move', [binPath, newBinPath])
+      await exec.exec('Move-Item', [
+        '-Path',
+        binPath,
+        '-Destination',
+        newBinPath
+      ])
       binPath = newBinPath
     }
     return Promise.resolve(binPath)
