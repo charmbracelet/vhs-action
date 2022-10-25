@@ -33,7 +33,7 @@
     "@actions/tool-cache": "^2.0.1",
     "@types/node": "^18.11.0",
     "@typescript-eslint/parser": "^5.14.0",
-    "@vercel/ncc": "^0.31.1",
+    "@vercel/ncc": "^0.34.0",
     "eslint": "^8.26.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-jest": "^26.1.1",
