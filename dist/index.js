@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installFfmpeg = exports.installLatestFfmpeg = exports.installTtydBrewHead = exports.installTtyd = void 0;
 const os = __importStar(__nccwpck_require__(2037));
 const path = __importStar(__nccwpck_require__(1017));
+const fs = __importStar(__nccwpck_require__(7147));
 const tc = __importStar(__nccwpck_require__(7784));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
@@ -110,20 +111,11 @@ function installTtyd(version) {
             core.debug(`Add ${dir} to PATH`);
             core.addPath(dir);
             if (osPlatform === 'linux') {
-                const newBinPath = path.join(dir, 'ttyd');
-                yield exec.exec('chmod', ['+x', binPath]);
-                yield exec.exec('mv', [binPath, newBinPath]);
-                binPath = newBinPath;
+                fs.chmodSync(binPath, '755');
+                fs.renameSync(binPath, path.join(dir, 'ttyd'));
             }
             if (osPlatform === 'win32') {
-                const newBinPath = path.join(dir, 'ttyd.exe');
-                yield exec.exec('Move-Item', [
-                    '-Path',
-                    binPath,
-                    '-Destination',
-                    newBinPath
-                ]);
-                binPath = newBinPath;
+                fs.renameSync(binPath, path.join(dir, 'ttyd.exe'));
             }
             return Promise.resolve(binPath);
         }

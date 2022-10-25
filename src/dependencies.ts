@@ -1,5 +1,6 @@
 import * as os from 'os'
 import * as path from 'path'
+import * as fs from 'fs'
 import * as tc from '@actions/tool-cache'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
@@ -71,20 +72,11 @@ export async function installTtyd(version?: string): Promise<string> {
     core.debug(`Add ${dir} to PATH`)
     core.addPath(dir)
     if (osPlatform === 'linux') {
-      const newBinPath = path.join(dir, 'ttyd')
-      await exec.exec('chmod', ['+x', binPath])
-      await exec.exec('mv', [binPath, newBinPath])
-      binPath = newBinPath
+      fs.chmodSync(binPath, '755')
+      fs.renameSync(binPath, path.join(dir, 'ttyd'))
     }
     if (osPlatform === 'win32') {
-      const newBinPath = path.join(dir, 'ttyd.exe')
-      await exec.exec('Move-Item', [
-        '-Path',
-        binPath,
-        '-Destination',
-        newBinPath
-      ])
-      binPath = newBinPath
+      fs.renameSync(binPath, path.join(dir, 'ttyd.exe'))
     }
     return Promise.resolve(binPath)
   }
