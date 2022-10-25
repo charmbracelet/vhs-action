@@ -5,8 +5,9 @@ import * as exec from '@actions/exec'
 async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
-    const bin = await intaller.install(version)
     const path = core.getInput('path')
+    core.info(`Installing VHS ${version}...`)
+    const bin = await intaller.install(version)
 
     await exec.exec(`${bin} ${path}`)
   } catch (error) {

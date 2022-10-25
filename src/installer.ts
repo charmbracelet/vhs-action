@@ -8,11 +8,13 @@ export async function install(version: string): Promise<string> {
   const octo = github.getOctokit(core.getInput('token'))
   let release
   if (version === 'latest') {
+    core.debug('Getting latest release')
     release = await octo.rest.repos.getLatestRelease({
       owner: 'charmbracelet',
       repo: 'vhs'
     })
   } else {
+    core.debug(`Getting release for version ${version}`)
     release = await octo.rest.repos.getReleaseByTag({
       owner: 'charmbracelet',
       repo: 'vhs',

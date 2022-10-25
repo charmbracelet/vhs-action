@@ -50,12 +50,14 @@ function install(version) {
         const octo = github.getOctokit(core.getInput('token'));
         let release;
         if (version === 'latest') {
+            core.debug('Getting latest release');
             release = yield octo.rest.repos.getLatestRelease({
                 owner: 'charmbracelet',
                 repo: 'vhs'
             });
         }
         else {
+            core.debug(`Getting release for version ${version}`);
             release = yield octo.rest.repos.getReleaseByTag({
                 owner: 'charmbracelet',
                 repo: 'vhs',
@@ -176,8 +178,9 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const version = core.getInput('version');
-            const bin = yield intaller.install(version);
             const path = core.getInput('path');
+            core.info(`Installing VHS ${version}...`);
+            const bin = yield intaller.install(version);
             yield exec.exec(`${bin} ${path}`);
         }
         catch (error) {
