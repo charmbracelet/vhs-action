@@ -4,9 +4,9 @@ import * as exec from '@actions/exec'
 
 async function run(): Promise<void> {
   try {
-    const version = core.getInput('version', {required: true})
+    const version = core.getInput('version')
     const bin = await intaller.install(version)
-    const path = core.getInput('path', {required: true})
+    const path = core.getInput('path')
 
     await exec.exec(`${bin} ${path}`)
   } catch (error) {

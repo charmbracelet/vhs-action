@@ -175,9 +175,9 @@ const exec = __importStar(__nccwpck_require__(1514));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const version = core.getInput('version', { required: true });
+            const version = core.getInput('version');
             const bin = yield intaller.install(version);
-            const path = core.getInput('path', { required: true });
+            const path = core.getInput('path');
             yield exec.exec(`${bin} ${path}`);
         }
         catch (error) {
