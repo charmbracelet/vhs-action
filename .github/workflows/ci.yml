@@ -31,5 +31,5 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: actions/upload-artifact@v3
         with:
-          name: vhs
+          name: vhs-${{ matrix.os }}
           path: demo.*

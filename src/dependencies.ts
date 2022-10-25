@@ -54,7 +54,7 @@ export async function installTtyd(version?: string): Promise<string> {
       if (version === 'latest') {
         args.push('--HEAD')
       }
-      core.warning(`MacOS ttyd does not support versioning`)
+      core.debug(`MacOS ttyd does not support versioning`)
       await exec.exec('brew', args)
       return Promise.resolve('/usr/local/bin/ttyd')
     }

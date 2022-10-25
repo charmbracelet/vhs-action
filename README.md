@@ -18,16 +18,15 @@ The GitHub token to use. Default `"${{ github.token }}"`.
 
 ## Example
 
+Auto commit new GIFs on tape change:
+
 ```yaml
 name: vhs
-
 on:
   push:
     paths:
-      - demo.tape
-
+      - vhs.tape
 jobs:
-
   vhs:
     runs-on: ubuntu-latest
     name: gifs
@@ -45,6 +44,7 @@ jobs:
           commit_user_name: vhs-action 📼
           commit_user_email: actions@github.com
           commit_author: vhs-action 📼 <actions@github.com>
+          file_pattern: '*.gif'
 ```
 
 ***

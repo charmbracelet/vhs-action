@@ -41,6 +41,8 @@
 #   Show                            Show the subsequent commands in the output
 
 Output demo.gif
+Output demo.mp4
+Output demo.webm
 
 Set FontSize 46
 Set Width 1200
