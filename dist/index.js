@@ -398,7 +398,7 @@ const githubFonts = [
     }
 ];
 const fontPath = {
-    linux: '/usr/local/share/fonts',
+    linux: '~/.local/share/fonts',
     darwin: '~/Library/Fonts'
 };
 const token = core.getInput('token');
@@ -411,8 +411,8 @@ function install() {
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
         }
         yield Promise.all([
-            ...githubFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return installGithubFont(font); })),
-            ...googleFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return installGoogleFont(font); })),
+            ...githubFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return yield installGithubFont(font); })),
+            ...googleFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return yield installGoogleFont(font); })),
             liberation()
         ]).catch(err => {
             core.warning(err.message);
