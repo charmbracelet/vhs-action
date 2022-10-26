@@ -81,7 +81,6 @@ on:
 jobs:
   vhs:
     runs-on: ubuntu-latest
-    name: gifs
     steps:
       - uses: actions/checkout@v3
       - uses: charmbracelet/vhs-action@main
@@ -97,6 +96,38 @@ jobs:
           commit_user_email: actions@github.com
           commit_author: vhs-action 📼 <actions@github.com>
           file_pattern: '*.gif'
+```
+
+Upload GIF to Imgur and comment in PR.
+
+```yaml
+name: comment gif
+on:
+  pull_request:
+    paths:
+      - vhs.tape
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: charmbracelet/vhs-action@main
+        with:
+          path: 'vhs.tape'
+      - uses: devicons/public-upload-to-imgur@v2.2.2
+        id: imgur_step
+        with:
+          path: ./vhs.gif
+          client_id: ${{ secrets.IMGUR_CLIENT_ID }} # Make sure you have this secret set in your repo
+      - uses: github-actions-up-and-running/pr-comment@v1.0.1
+        env:
+          IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
+          MESSAGE: |
+            ![VHS GIf]({0})
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
+
 ```
 
 ## Available Fonts
