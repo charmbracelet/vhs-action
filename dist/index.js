@@ -378,13 +378,6 @@ const googleFonts = [
 ];
 const githubFonts = [
     {
-        owner: 'adobe-fonts',
-        repo: 'source-code-pro',
-        assetStartsWith: 'TTF',
-        assetEndsWith: '.zip',
-        staticPath: []
-    },
-    {
         owner: 'dejavu-fonts',
         repo: 'dejavu-fonts',
         assetStartsWith: 'dejavu-fonts-ttf',
