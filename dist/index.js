@@ -401,8 +401,8 @@ const githubFonts = [
     }
 ];
 const fontPath = {
-    linux: '$HOME/.local/share/fonts',
-    darwin: '$HOME/Library/Fonts'
+    linux: `${os.homedir()}/.local/share/fonts`,
+    darwin: `${os.homedir()}/Library/Fonts`
 };
 const token = core.getInput('token');
 const octo = github.getOctokit(token);
@@ -411,6 +411,7 @@ function install() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing fonts...`);
         if (osPlatform === 'linux' || osPlatform === 'darwin') {
+            core.debug(`Creating font directory ${fontPath[osPlatform]}`);
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
         }
         for (const font of googleFonts) {

@@ -85,8 +85,8 @@ const githubFonts: GithubFont[] = [
 ]
 
 const fontPath = {
-  linux: '$HOME/.local/share/fonts',
-  darwin: '$HOME/Library/Fonts'
+  linux: `${os.homedir()}/.local/share/fonts`,
+  darwin: `${os.homedir()}/Library/Fonts`
 }
 
 const token = core.getInput('token')
@@ -96,6 +96,7 @@ const osPlatform: string = os.platform()
 export async function install(): Promise<void> {
   core.info(`Installing fonts...`)
   if (osPlatform === 'linux' || osPlatform === 'darwin') {
+    core.debug(`Creating font directory ${fontPath[osPlatform]}`)
     await fs.mkdir(fontPath[osPlatform], {recursive: true})
   }
   for (const font of googleFonts) {
