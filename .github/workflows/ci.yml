@@ -41,7 +41,7 @@ jobs:
         run: fc-list | sort
       - name: List Fonts - MacOS
         if: ${{ matrix.os == 'macOS-latest' }}
-        run: system_profiler SPFontsDataType | grep -E '.ttf$' | sort
+        run: system_profiler SPFontsDataType | grep -E 'Location:|Full Name:'
       - name: List Fonts - Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: dir C:\\Windows\\Fonts
