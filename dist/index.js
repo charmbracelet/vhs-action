@@ -404,6 +404,7 @@ const octo = github.getOctokit(token);
 const osPlatform = os.platform();
 function install() {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing fonts...`);
         if (osPlatform === 'linux') {
             yield fs.mkdir('~/.local/share/fonts', { recursive: true });
         }
@@ -461,6 +462,7 @@ function installWindowsFont(file) {
 }
 function installGithubFont(font) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing ${font.repo}`);
         const cacheDir = tc.find(font.repo, 'latest');
         if (cacheDir) {
             core.info(`Found cached version of ${font.repo}`);
@@ -475,6 +477,7 @@ function installGithubFont(font) {
             const name = asset.name;
             if (name.startsWith(font.assetStartsWith) &&
                 name.endsWith(font.assetEndsWith)) {
+                core.info(`Downloading ${font.repo}`);
                 const zipPath = yield tc.downloadTool(url, '', token);
                 const unzipPath = yield tc.extractZip(zipPath);
                 const cacheDir = yield tc.cacheDir(path.join(unzipPath, ...font.staticPath), font.repo, 'latest');
@@ -486,6 +489,7 @@ function installGithubFont(font) {
 }
 function installGoogleFont(font) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Installing ${font.name}`);
         const fontCacheName = font.name.toLowerCase().replace(/ /g, '-');
         const escapedName = font.name.replace(/ /g, '%20');
         let cacheDir = tc.find(fontCacheName, 'latest');
@@ -493,6 +497,7 @@ function installGoogleFont(font) {
             core.info(`Found cached version of ${font.name}`);
             return installFonts(cacheDir);
         }
+        core.info(`Downloading ${font.name}`);
         const zipPath = yield tc.downloadTool(`https://fonts.google.com/download?family=${escapedName}`, '', token);
         const unzipPath = yield tc.extractZip(zipPath);
         cacheDir = yield tc.cacheDir(path.join(unzipPath, ...font.staticPath), fontCacheName, 'latest');
@@ -501,11 +506,13 @@ function installGoogleFont(font) {
 }
 function liberation() {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info('Installing Liberation Fonts');
         let cacheDir = tc.find('liberation', 'latest');
         if (cacheDir) {
             core.info(`Found cached version of Liberation`);
             return installFonts(cacheDir);
         }
+        core.info(`Downloading Liberation`);
         // FIXME liberation-fonts don't upload their fonts to GitHub releases, instead in the release description :/
         const zipPath = yield tc.downloadTool('https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz', '', token);
         const unzipPath = yield tc.extractTar(zipPath);

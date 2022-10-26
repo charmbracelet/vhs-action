@@ -89,6 +89,7 @@ const octo = github.getOctokit(token)
 const osPlatform: string = os.platform()
 
 export async function install(): Promise<void> {
+  core.info(`Installing fonts...`)
   if (osPlatform === 'linux') {
     await fs.mkdir('~/.local/share/fonts', {recursive: true})
   }
@@ -147,6 +148,7 @@ async function installWindowsFont(file: string): Promise<void> {
 }
 
 async function installGithubFont(font: GithubFont): Promise<void> {
+  core.info(`Installing ${font.repo}`)
   const cacheDir = tc.find(font.repo, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.repo}`)
@@ -163,6 +165,7 @@ async function installGithubFont(font: GithubFont): Promise<void> {
       name.startsWith(font.assetStartsWith) &&
       name.endsWith(font.assetEndsWith)
     ) {
+      core.info(`Downloading ${font.repo}`)
       const zipPath = await tc.downloadTool(url, '', token)
       const unzipPath = await tc.extractZip(zipPath)
       const cacheDir = await tc.cacheDir(
@@ -177,6 +180,7 @@ async function installGithubFont(font: GithubFont): Promise<void> {
 }
 
 async function installGoogleFont(font: GoogleFont): Promise<void> {
+  core.info(`Installing ${font.name}`)
   const fontCacheName = font.name.toLowerCase().replace(/ /g, '-')
   const escapedName = font.name.replace(/ /g, '%20')
   let cacheDir = tc.find(fontCacheName, 'latest')
@@ -184,6 +188,7 @@ async function installGoogleFont(font: GoogleFont): Promise<void> {
     core.info(`Found cached version of ${font.name}`)
     return installFonts(cacheDir)
   }
+  core.info(`Downloading ${font.name}`)
   const zipPath = await tc.downloadTool(
     `https://fonts.google.com/download?family=${escapedName}`,
     '',
@@ -199,11 +204,13 @@ async function installGoogleFont(font: GoogleFont): Promise<void> {
 }
 
 async function liberation(): Promise<void> {
+  core.info('Installing Liberation Fonts')
   let cacheDir = tc.find('liberation', 'latest')
   if (cacheDir) {
     core.info(`Found cached version of Liberation`)
     return installFonts(cacheDir)
   }
+  core.info(`Downloading Liberation`)
   // FIXME liberation-fonts don't upload their fonts to GitHub releases, instead in the release description :/
   const zipPath = await tc.downloadTool(
     'https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz',
