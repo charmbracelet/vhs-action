@@ -297,8 +297,6 @@ exports.installFfmpeg = installFfmpeg;
 
 "use strict";
 
-// https://www.jetbrains.com/lp/mono/
-// https://fonts.google.com/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -427,24 +425,44 @@ function install() {
 exports.install = install;
 function installFonts(dir) {
     return __awaiter(this, void 0, void 0, function* () {
-        return fs.readdir(dir).then((files) => __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all(files
-                .filter(file => file.endsWith('.ttf'))
-                .map((file) => __awaiter(this, void 0, void 0, function* () {
-                const filename = path.basename(file);
-                const absolutePath = path.resolve(dir, file);
-                switch (osPlatform) {
-                    case 'linux':
-                    case 'darwin': {
-                        return fs.copyFile(absolutePath, path.join(fontPath[osPlatform], filename));
-                    }
-                    case 'win32': {
-                        return installWindowsFont(absolutePath);
-                    }
+        const files = (yield fs.readdir(dir)).filter(file => file.endsWith('.ttf'));
+        return Promise.all(files.map((file) => __awaiter(this, void 0, void 0, function* () {
+            const filename = path.basename(file);
+            const absolutePath = path.resolve(dir, file);
+            switch (osPlatform) {
+                case 'linux':
+                case 'darwin': {
+                    return fs.copyFile(absolutePath, path.join(fontPath[osPlatform], filename));
                 }
-                return Promise.reject(new Error('Unsupported platform'));
-            })));
-        }));
+                case 'win32': {
+                    return installWindowsFont(absolutePath);
+                }
+            }
+            return Promise.reject(new Error('Unsupported platform'));
+        })));
+        // fs.readdir(dir).then(async files => {
+        //   await Promise.all(
+        //     files
+        //       .filter(file => file.endsWith('.ttf'))
+        //       .map(async file => {
+        //         const filename = path.basename(file)
+        //         const absolutePath = path.resolve(dir, file)
+        //         switch (osPlatform) {
+        //           case 'linux':
+        //           case 'darwin': {
+        //             return fs.copyFile(
+        //               absolutePath,
+        //               path.join(fontPath[osPlatform], filename)
+        //             )
+        //           }
+        //           case 'win32': {
+        //             return installWindowsFont(absolutePath)
+        //           }
+        //         }
+        //         return Promise.reject(new Error('Unsupported platform'))
+        //       })
+        //   )
+        // })
     });
 }
 // based on https://superuser.com/a/201899/985112

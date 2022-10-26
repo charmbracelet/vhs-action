@@ -1,6 +1,3 @@
-// https://www.jetbrains.com/lp/mono/
-// https://fonts.google.com/
-
 import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs/promises'
@@ -109,30 +106,52 @@ export async function install(): Promise<void> {
   }
 }
 
-async function installFonts(dir: string): Promise<void> {
-  return fs.readdir(dir).then(async files => {
-    await Promise.all(
-      files
-        .filter(file => file.endsWith('.ttf'))
-        .map(async file => {
-          const filename = path.basename(file)
-          const absolutePath = path.resolve(dir, file)
-          switch (osPlatform) {
-            case 'linux':
-            case 'darwin': {
-              return fs.copyFile(
-                absolutePath,
-                path.join(fontPath[osPlatform], filename)
-              )
-            }
-            case 'win32': {
-              return installWindowsFont(absolutePath)
-            }
-          }
-          return Promise.reject(new Error('Unsupported platform'))
-        })
-    )
-  })
+async function installFonts(dir: string): Promise<void[]> {
+  const files = (await fs.readdir(dir)).filter(file => file.endsWith('.ttf'))
+
+  return Promise.all(
+    files.map(async file => {
+      const filename = path.basename(file)
+      const absolutePath = path.resolve(dir, file)
+      switch (osPlatform) {
+        case 'linux':
+        case 'darwin': {
+          return fs.copyFile(
+            absolutePath,
+            path.join(fontPath[osPlatform], filename)
+          )
+        }
+        case 'win32': {
+          return installWindowsFont(absolutePath)
+        }
+      }
+      return Promise.reject(new Error('Unsupported platform'))
+    })
+  )
+
+  // fs.readdir(dir).then(async files => {
+  //   await Promise.all(
+  //     files
+  //       .filter(file => file.endsWith('.ttf'))
+  //       .map(async file => {
+  //         const filename = path.basename(file)
+  //         const absolutePath = path.resolve(dir, file)
+  //         switch (osPlatform) {
+  //           case 'linux':
+  //           case 'darwin': {
+  //             return fs.copyFile(
+  //               absolutePath,
+  //               path.join(fontPath[osPlatform], filename)
+  //             )
+  //           }
+  //           case 'win32': {
+  //             return installWindowsFont(absolutePath)
+  //           }
+  //         }
+  //         return Promise.reject(new Error('Unsupported platform'))
+  //       })
+  //   )
+  // })
 }
 
 // based on https://superuser.com/a/201899/985112
@@ -151,7 +170,7 @@ async function installWindowsFont(file: string): Promise<void> {
   await exec.exec('objFolderItem.InvokeVerb("Install")')
 }
 
-async function installGithubFont(font: GithubFont): Promise<void> {
+async function installGithubFont(font: GithubFont): Promise<void[]> {
   core.info(`Installing ${font.repo}`)
   const cacheDir = tc.find(font.repo, 'latest')
   if (cacheDir) {
@@ -191,7 +210,7 @@ async function installGithubFont(font: GithubFont): Promise<void> {
   return Promise.reject(new Error(`Could not find ${font.repo}`))
 }
 
-async function installGoogleFont(font: GoogleFont): Promise<void> {
+async function installGoogleFont(font: GoogleFont): Promise<void[]> {
   core.info(`Installing ${font.name}`)
   const fontCacheName = font.name.toLowerCase().replace(/ /g, '-')
   const escapedName = font.name.replace(/ /g, '%20')
@@ -221,7 +240,7 @@ async function installGoogleFont(font: GoogleFont): Promise<void> {
   return installFonts(cacheDir)
 }
 
-async function liberation(): Promise<void> {
+async function liberation(): Promise<void[]> {
   core.info('Installing Liberation Fonts')
   let cacheDir = tc.find('liberation', 'latest')
   if (cacheDir) {
