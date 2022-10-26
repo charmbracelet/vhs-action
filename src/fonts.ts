@@ -84,7 +84,7 @@ const githubFonts: GithubFont[] = [
 ]
 
 const fontPath = {
-  linux: '~/.local/share/fonts',
+  linux: '/usr/local/share/fonts',
   darwin: '~/Library/Fonts'
 }
 
@@ -95,7 +95,7 @@ const osPlatform: string = os.platform()
 export async function install(): Promise<void> {
   core.info(`Installing fonts...`)
   if (osPlatform === 'linux') {
-    await fs.mkdir('~/.local/share/fonts', {recursive: true})
+    await fs.mkdir(fontPath[osPlatform], {recursive: true})
   }
   await Promise.all([
     ...githubFonts.map(async font => installGithubFont(font)),
