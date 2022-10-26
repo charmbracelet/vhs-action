@@ -44,4 +44,7 @@ jobs:
         run: system_profiler SPFontsDataType | grep -E 'Location:|Full Name:'
       - name: List Fonts - Windows
         if: ${{ matrix.os == 'windows-latest' }}
-        run: dir C:\\Windows\\Fonts
+        shell: pwsh
+        run: |
+          [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+          (New-Object System.Drawing.Text.InstalledFontCollection).Families
