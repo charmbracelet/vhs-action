@@ -454,7 +454,9 @@ function installWindowsFont(filePath) {
         const vbs = `Set objShell = CreateObject("Shell.Application")
 Set objFolder = objShell.Namespace("${fontPath.win32}")
 Set objFolderItem = objFolder.ParseName("${filePath}")
-objFolderItem.InvokeVerb("Install")`;
+objFolderItem.InvokeVerb("Install")
+`;
+        core.debug(`Writing vbscript ` + '`' + `${vbs}` + '`');
         const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs');
         yield fs.writeFile(vbsFilePath, vbs);
         yield exec.exec('cscript.exe', [vbsFilePath]);
