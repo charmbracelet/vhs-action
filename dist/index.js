@@ -516,9 +516,9 @@ function installNerdFonts(fonts) {
             const url = asset.url;
             const name = asset.name;
             if (fonts.includes(name)) {
-                const font = path.parse(name).name;
+                const font = `${path.parse(name).name}-nerd`;
                 core.info(`Installing ${font}`);
-                let cacheDir = tc.find(`${font}-nerd`, 'latest');
+                let cacheDir = tc.find(font, 'latest');
                 if (cacheDir) {
                     core.info(`Found cached version of ${font}`);
                     rv.push(installFonts(cacheDir));
@@ -529,7 +529,7 @@ function installNerdFonts(fonts) {
                     accept: 'application/octet-stream'
                 });
                 const unzipPath = yield tc.extractZip(zipPath);
-                cacheDir = yield tc.cacheDir(unzipPath, `${font}-nerd`, 'latest');
+                cacheDir = yield tc.cacheDir(unzipPath, font, 'latest');
                 rv.push(installFonts(cacheDir));
             }
         }
