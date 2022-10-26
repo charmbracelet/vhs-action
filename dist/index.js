@@ -338,6 +338,9 @@ const tc = __importStar(__nccwpck_require__(7784));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
+const specialNames = {
+    '%assetNameName%': (asset) => path.parse(asset.name).name
+};
 const googleFonts = [
     {
         name: 'Source Code Pro',
@@ -373,7 +376,7 @@ const githubFonts = [
         repo: 'dejavu-fonts',
         assetStartsWith: 'dejavu-fonts-ttf',
         assetEndsWith: '.zip',
-        staticPath: ['ttf']
+        staticPath: ['%assetName%', 'ttf']
     },
     {
         owner: 'tonsky',
@@ -407,7 +410,7 @@ const osPlatform = os.platform();
 function install() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing fonts...`);
-        if (osPlatform === 'linux') {
+        if (osPlatform === 'linux' || osPlatform === 'darwin') {
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
         }
         for (const font of googleFonts) {
@@ -484,7 +487,10 @@ function installGithubFont(font) {
                     accept: 'application/octet-stream'
                 });
                 const unzipPath = yield tc.extractZip(zipPath);
-                const cacheDir = yield tc.cacheDir(path.join(unzipPath, ...font.staticPath), font.repo, 'latest');
+                const staticPath = font.staticPath.map(p => {
+                    return sanitizeSpecial(p, asset);
+                });
+                const cacheDir = yield tc.cacheDir(path.join(unzipPath, ...staticPath), font.repo, 'latest');
                 for (const file of yield fs.readdir(cacheDir)) {
                     core.debug(`Found file ${file}`);
                 }
@@ -532,6 +538,14 @@ function liberation() {
         cacheDir = yield tc.cacheDir(unzipPath, 'liberation', 'latest');
         return installFonts(cacheDir);
     });
+}
+// DejaVu fonts have a different structure than the other fonts. The zip
+// contains a root folder with the same zip file name without the extension.
+function sanitizeSpecial(name, asset) {
+    for (const [key, value] of Object.entries(specialNames)) {
+        name = name.replace(key, value(asset));
+    }
+    return name;
 }
 
 

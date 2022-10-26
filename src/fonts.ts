@@ -6,6 +6,10 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 
+const specialNames = {
+  '%assetNameName%': (asset: {name: string}) => path.parse(asset.name).name
+}
+
 interface GithubFont {
   owner: string
   repo: string
@@ -55,7 +59,7 @@ const githubFonts: GithubFont[] = [
     repo: 'dejavu-fonts',
     assetStartsWith: 'dejavu-fonts-ttf',
     assetEndsWith: '.zip',
-    staticPath: ['ttf']
+    staticPath: ['%assetName%', 'ttf']
   },
   {
     owner: 'tonsky',
@@ -91,7 +95,7 @@ const osPlatform: string = os.platform()
 
 export async function install(): Promise<void> {
   core.info(`Installing fonts...`)
-  if (osPlatform === 'linux') {
+  if (osPlatform === 'linux' || osPlatform === 'darwin') {
     await fs.mkdir(fontPath[osPlatform], {recursive: true})
   }
   for (const font of googleFonts) {
@@ -172,8 +176,11 @@ async function installGithubFont(font: GithubFont): Promise<void[]> {
         accept: 'application/octet-stream'
       })
       const unzipPath = await tc.extractZip(zipPath)
+      const staticPath = font.staticPath.map(p => {
+        return sanitizeSpecial(p, asset)
+      })
       const cacheDir = await tc.cacheDir(
-        path.join(unzipPath, ...font.staticPath),
+        path.join(unzipPath, ...staticPath),
         font.repo,
         'latest'
       )
@@ -233,4 +240,13 @@ async function liberation(): Promise<void[]> {
   const unzipPath = await tc.extractTar(zipPath)
   cacheDir = await tc.cacheDir(unzipPath, 'liberation', 'latest')
   return installFonts(cacheDir)
+}
+
+// DejaVu fonts have a different structure than the other fonts. The zip
+// contains a root folder with the same zip file name without the extension.
+function sanitizeSpecial(name: string, asset: {name: string}): string {
+  for (const [key, value] of Object.entries(specialNames)) {
+    name = name.replace(key, value(asset))
+  }
+  return name
 }
