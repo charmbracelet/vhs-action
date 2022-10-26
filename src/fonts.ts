@@ -156,9 +156,6 @@ async function installGithubFont(font: GithubFont): Promise<void[]> {
   const cacheDir = tc.find(font.repo, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.repo}`)
-    for (const file of await fs.readdir(cacheDir)) {
-      core.debug(`Found cached ${file}`)
-    }
     return installFonts(cacheDir)
   }
   const release = await octo.rest.repos.getLatestRelease({
@@ -185,9 +182,6 @@ async function installGithubFont(font: GithubFont): Promise<void[]> {
         font.repo,
         'latest'
       )
-      for (const file of await fs.readdir(cacheDir)) {
-        core.debug(`Found file ${file}`)
-      }
       return installFonts(cacheDir)
     }
   }
@@ -201,9 +195,6 @@ async function installGoogleFont(font: GoogleFont): Promise<void[]> {
   let cacheDir = tc.find(fontCacheName, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.name}`)
-    for (const file of await fs.readdir(cacheDir)) {
-      core.debug(`Found cached ${file}`)
-    }
     return installFonts(cacheDir)
   }
   core.info(`Downloading ${font.name}`)
@@ -218,9 +209,6 @@ async function installGoogleFont(font: GoogleFont): Promise<void[]> {
     fontCacheName,
     'latest'
   )
-  for (const file of await fs.readdir(cacheDir)) {
-    core.debug(`Found file ${file}`)
-  }
   return installFonts(cacheDir)
 }
 
