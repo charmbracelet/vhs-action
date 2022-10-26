@@ -24,6 +24,10 @@ interface GoogleFont {
 
 const googleFonts: GoogleFont[] = [
   {
+    name: 'Source Code Pro',
+    staticPath: ['static']
+  },
+  {
     name: 'Inconsolata',
     staticPath: ['static', 'Inconsolata']
   },
@@ -152,6 +156,9 @@ async function installGithubFont(font: GithubFont): Promise<void> {
   const cacheDir = tc.find(font.repo, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.repo}`)
+    for (const file of await fs.readdir(cacheDir)) {
+      core.debug(`Found cached ${file}`)
+    }
     return installFonts(cacheDir)
   }
   const release = await octo.rest.repos.getLatestRelease({
@@ -159,20 +166,25 @@ async function installGithubFont(font: GithubFont): Promise<void> {
     repo: font.repo
   })
   for (const asset of release.data.assets) {
-    const url = asset.browser_download_url
+    const url = asset.url
     const name = asset.name
     if (
       name.startsWith(font.assetStartsWith) &&
       name.endsWith(font.assetEndsWith)
     ) {
       core.info(`Downloading ${font.repo}`)
-      const zipPath = await tc.downloadTool(url, '', token)
+      const zipPath = await tc.downloadTool(url, '', `token ${token}`, {
+        accept: 'application/octet-stream'
+      })
       const unzipPath = await tc.extractZip(zipPath)
       const cacheDir = await tc.cacheDir(
         path.join(unzipPath, ...font.staticPath),
         font.repo,
         'latest'
       )
+      for (const file of await fs.readdir(cacheDir)) {
+        core.debug(`Found file ${file}`)
+      }
       return installFonts(cacheDir)
     }
   }
@@ -186,6 +198,9 @@ async function installGoogleFont(font: GoogleFont): Promise<void> {
   let cacheDir = tc.find(fontCacheName, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.name}`)
+    for (const file of await fs.readdir(cacheDir)) {
+      core.debug(`Found cached ${file}`)
+    }
     return installFonts(cacheDir)
   }
   core.info(`Downloading ${font.name}`)
@@ -200,6 +215,9 @@ async function installGoogleFont(font: GoogleFont): Promise<void> {
     fontCacheName,
     'latest'
   )
+  for (const file of await fs.readdir(cacheDir)) {
+    core.debug(`Found file ${file}`)
+  }
   return installFonts(cacheDir)
 }
 

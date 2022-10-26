@@ -38,7 +38,7 @@ jobs:
           path: vhs.*
       - name: List Fonts
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: fc-list
+        run: fc-list | sort
       - name: List Fonts
         if: ${{ matrix.os == 'macOS-latest' }}
         run: system_profiler SPFontsDataType | grep -E '.ttf:$|.otf:$' | sort

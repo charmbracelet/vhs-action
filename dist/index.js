@@ -342,6 +342,10 @@ const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
 const googleFonts = [
     {
+        name: 'Source Code Pro',
+        staticPath: ['static']
+    },
+    {
         name: 'Inconsolata',
         staticPath: ['static', 'Inconsolata']
     },
@@ -466,6 +470,9 @@ function installGithubFont(font) {
         const cacheDir = tc.find(font.repo, 'latest');
         if (cacheDir) {
             core.info(`Found cached version of ${font.repo}`);
+            for (const file of yield fs.readdir(cacheDir)) {
+                core.debug(`Found cached ${file}`);
+            }
             return installFonts(cacheDir);
         }
         const release = yield octo.rest.repos.getLatestRelease({
@@ -473,14 +480,19 @@ function installGithubFont(font) {
             repo: font.repo
         });
         for (const asset of release.data.assets) {
-            const url = asset.browser_download_url;
+            const url = asset.url;
             const name = asset.name;
             if (name.startsWith(font.assetStartsWith) &&
                 name.endsWith(font.assetEndsWith)) {
                 core.info(`Downloading ${font.repo}`);
-                const zipPath = yield tc.downloadTool(url, '', token);
+                const zipPath = yield tc.downloadTool(url, '', `token ${token}`, {
+                    accept: 'application/octet-stream'
+                });
                 const unzipPath = yield tc.extractZip(zipPath);
                 const cacheDir = yield tc.cacheDir(path.join(unzipPath, ...font.staticPath), font.repo, 'latest');
+                for (const file of yield fs.readdir(cacheDir)) {
+                    core.debug(`Found file ${file}`);
+                }
                 return installFonts(cacheDir);
             }
         }
