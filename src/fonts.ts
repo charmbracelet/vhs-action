@@ -166,16 +166,15 @@ async function installFonts(dir: string): Promise<void[]> {
 }
 
 // based on https://superuser.com/a/788759/985112
-async function installWindowsFont(dirPath: string): Promise<void> {
-  const out = await exec.getExecOutput(
+async function installWindowsFont(dirPath: string): Promise<number> {
+  core.debug(`Running PS1 install script for ${dirPath}`)
+  return exec.exec(
     'powershell.exe',
     ['-ExecutionPolicy', 'Bypass', ps1InstallPath],
     {
       cwd: dirPath
     }
   )
-  core.debug(`Running PS1 install script for ${dirPath}`)
-  core.debug(out.stdout)
 }
 
 async function installGithubFont(font: GithubFont): Promise<void[]> {

@@ -474,11 +474,10 @@ function installFonts(dir) {
 // based on https://superuser.com/a/788759/985112
 function installWindowsFont(dirPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const out = yield exec.getExecOutput('powershell.exe', ['-ExecutionPolicy', 'Bypass', ps1InstallPath], {
+        core.debug(`Running PS1 install script for ${dirPath}`);
+        return exec.exec('powershell.exe', ['-ExecutionPolicy', 'Bypass', ps1InstallPath], {
             cwd: dirPath
         });
-        core.debug(`Running PS1 install script for ${dirPath}`);
-        core.debug(out.stdout);
     });
 }
 function installGithubFont(font) {
