@@ -410,13 +410,13 @@ function install() {
         if (osPlatform === 'linux') {
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
         }
-        yield Promise.all([
-            ...githubFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return yield installGithubFont(font); })),
-            ...googleFonts.map((font) => __awaiter(this, void 0, void 0, function* () { return yield installGoogleFont(font); })),
-            liberation()
-        ]).catch(err => {
-            core.warning(err.message);
-        });
+        for (const font of googleFonts) {
+            yield installGoogleFont(font);
+        }
+        for (const font of githubFonts) {
+            yield installGithubFont(font);
+        }
+        yield liberation();
         if (osPlatform === 'linux') {
             yield exec.exec('fc-cache', ['-f', '-v']);
         }
@@ -428,7 +428,7 @@ function installFonts(dir) {
         const files = (yield fs.readdir(dir)).filter(file => file.endsWith('.ttf'));
         return Promise.all(files.map((file) => __awaiter(this, void 0, void 0, function* () {
             const filename = path.basename(file);
-            const absolutePath = path.resolve(dir, file);
+            const absolutePath = path.resolve(dir, filename);
             switch (osPlatform) {
                 case 'linux':
                 case 'darwin': {
@@ -440,29 +440,6 @@ function installFonts(dir) {
             }
             return Promise.reject(new Error('Unsupported platform'));
         })));
-        // fs.readdir(dir).then(async files => {
-        //   await Promise.all(
-        //     files
-        //       .filter(file => file.endsWith('.ttf'))
-        //       .map(async file => {
-        //         const filename = path.basename(file)
-        //         const absolutePath = path.resolve(dir, file)
-        //         switch (osPlatform) {
-        //           case 'linux':
-        //           case 'darwin': {
-        //             return fs.copyFile(
-        //               absolutePath,
-        //               path.join(fontPath[osPlatform], filename)
-        //             )
-        //           }
-        //           case 'win32': {
-        //             return installWindowsFont(absolutePath)
-        //           }
-        //         }
-        //         return Promise.reject(new Error('Unsupported platform'))
-        //       })
-        //   )
-        // })
     });
 }
 // based on https://superuser.com/a/201899/985112
