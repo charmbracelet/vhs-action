@@ -438,6 +438,7 @@ exports.install = install;
 function installFonts(dir) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = (yield fs.readdir(dir)).filter(file => file.endsWith('.ttf'));
+        // Windows installs all fonts at once
         if (osPlatform === 'win32') {
             return installWindowsFont(path.resolve(dir)).then(() => []);
         }
