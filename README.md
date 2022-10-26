@@ -2,31 +2,75 @@
 
 GitHub Action to run [VHS][vhs].
 
-[![welcome to vhs!](vhs.gif)][vhs]
+<img alt="Welcome to VHS!" src="vhs.gif" width="600" />
 
 [vhs]: https://github.com/charmbracelet/vhs
 
 ## Inputs
 
-### `path`
+<table>
 
-The path to the VHS tape file. Default `"vhs.tape"`.
+<thead>
+  <tr>
+  <th>Name</th>
+  <th>Description</th>
+  <th>Default</th>
+  </tr>
+</thead>
 
-### `version`
+<tbody>
+<tr>
+<td>path</td>
+<td>Path of the VHS `.tape` file</td>
+<td>
 
-The version of VHS to use. Default `"latest"`.
+```
+"vhs.tape"
+```
 
-### `token`
+</td>
+</tr>
+<tr>
+<td>version</td>
+<td>Version of VHS to use</td>
+<td>
 
-The GitHub token to use. Default `"${{ github.token }}"`.
+```
+"latest"
+```
+ 
+</td>
+</tr>
+<tr>
+<td>token</td>
+<td>GitHub token to use</td>
+<td>
 
-### `install-fonts`
+```
+"latest"
+```
+ 
+</td>
+</tr>
+<tr>
+<td>install-fonts</td>
+<td>Whether to install fonts</td>
+<td>
 
-Whether to install fonts. Default `"true"`.
+```
+"true"
+```
+ 
+</td>
+</tr>
 
-## Example
+</tbody>
+</table>
 
-Auto commit new GIFs on tape change:
+## Example Action
+
+The following is a workflow that uses VHS to generate new GIFs (from
+ `vhs.tape`) and then auto commits the GIF file to the repository.
 
 ```yaml
 name: vhs
@@ -55,36 +99,45 @@ jobs:
           file_pattern: '*.gif'
 ```
 
-## Fonts
+## Available Fonts
 
-The action installs a few fonts by default.
+The action will provide the following fonts (and their [nerd font](nerdfonts)
+variations) by default:
 
-* Bitstream Vera Sans Mono Nerd
+[nerdfonts]: https://www.nerdfonts.com
+
+* Bitstream Vera Sans Mono
 * DejaVu
-* DejaVu Sans Mono Nerd
 * Fira Code
-* Fira Code Nerd
 * Hack
-* Hack Nerd
-* IBM Plex Mono Nerd
-* Inconsolata
-* Inconsolata Nerd
-* InconsolataGo Nerd
+* IBM Plex Mono
 * JetBrains Mono
-* JetBrains Mono Nerd
-* Liberation
-* Liberation Mono Nerd
-* Noto Sans Mono
 * Roboto Mono
 * Source Code Pro
-* Source Code Pro Nerd
 * Ubuntu Mono
-* Ubuntu Mono Nerd
+
+## Feedback
+
+We’d love to hear your thoughts on this project. Feel free to drop us a note!
+
+* [Twitter](https://twitter.com/charmcli)
+* [The Fediverse](https://mastodon.social/@charmcli)
+* [Discord](https://charm.sh/chat)
+
+## License
+
+[MIT](https://github.com/charmbracelet/vhs/raw/main/LICENSE)
 
 ***
 
 Part of [Charm](https://charm.sh).
 
-<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
+<a href="https://charm.sh/">
+  <img
+    alt="The Charm logo"
+    width="400"
+    src="https://stuff.charm.sh/charm-badge.jpg"
+  />
+</a>
 
 Charm热爱开源 • Charm loves open source
