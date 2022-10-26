@@ -138,16 +138,42 @@ async function installFonts(dir: string): Promise<void[]> {
 
 // based on https://superuser.com/a/201899/985112 &&
 // https://stackoverflow.com/questions/46597891/calling-vbscript-from-powershell-is-this-right-way-to-do-it
-async function installWindowsFont(filePath: string): Promise<void> {
-  const vbs = `Set objShell = CreateObject("Shell.Application")
-Set objFolder = objShell.Namespace("${fontPath.win32}")
-Set objFolderItem = objFolder.ParseName("${filePath}")
-objFolderItem.InvokeVerb("Install")
-`
-  core.debug(`Writing vbscript ` + '`' + `${vbs}` + '`')
-  const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs')
-  await fs.writeFile(vbsFilePath, vbs)
-  await exec.exec('cscript.exe', [vbsFilePath])
+async function installWindowsFont(dirPath: string): Promise<void> {
+  //   $fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
+  // Get-ChildItem -Recurse -include *.ttf | % { $fonts.CopyHere($_.fullname) }
+  await exec.getExecOutput(
+    '$fonts',
+    ['(New-Object', '-ComObject', 'Shell.Application).Namespace(0x14)'],
+    {
+      cwd: dirPath
+    }
+  )
+  await exec.getExecOutput(
+    'Get-ChildItem',
+    [
+      '-Recurse',
+      '-include',
+      '*.ttf',
+      '|',
+      '%',
+      '{',
+      '$fonts.CopyHere($_.fullname)',
+      '}'
+    ],
+    {
+      cwd: dirPath
+    }
+  )
+
+  //   const vbs = `Set objShell = CreateObject("Shell.Application")
+  // Set objFolder = objShell.Namespace("${fontPath.win32}")
+  // Set objFolderItem = objFolder.ParseName("${dirPath}")
+  // objFolderItem.InvokeVerb("Install")
+  // `
+  //   core.debug(`Writing vbscript ` + '`' + `${vbs}` + '`')
+  //   const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs')
+  //   await fs.writeFile(vbsFilePath, vbs)
+  //   await exec.exec('cscript.exe', [vbsFilePath])
 }
 
 async function installGithubFont(font: GithubFont): Promise<void[]> {
