@@ -86,7 +86,8 @@ const githubFonts: GithubFont[] = [
 
 const fontPath = {
   linux: `${os.homedir()}/.local/share/fonts`,
-  darwin: `${os.homedir()}/Library/Fonts`
+  darwin: `${os.homedir()}/Library/Fonts`,
+  win32: '%LocalAppData%\\Microsoft\\Windows\\Fonts'
 }
 
 const token = core.getInput('token')
@@ -135,20 +136,16 @@ async function installFonts(dir: string): Promise<void[]> {
   )
 }
 
-// based on https://superuser.com/a/201899/985112
-async function installWindowsFont(file: string): Promise<void> {
-  await exec.exec('Set', ['objShell', '=', 'CreateObject("Shell.Application")'])
-  await exec.exec('Set', [
-    'objFolder',
-    '=',
-    'objShell.Namespace("C:\\Windows\\Font")'
-  ])
-  await exec.exec('Set', [
-    'objFolderItem',
-    '=',
-    `objFolder.ParseName("${file}")`
-  ])
-  await exec.exec('objFolderItem.InvokeVerb("Install")')
+// based on https://superuser.com/a/201899/985112 &&
+// https://stackoverflow.com/questions/46597891/calling-vbscript-from-powershell-is-this-right-way-to-do-it
+async function installWindowsFont(filePath: string): Promise<void> {
+  const vbs = `Set objShell = CreateObject("Shell.Application")
+Set objFolder = objShell.Namespace("${fontPath.win32}")
+Set objFolderItem = objFolder.ParseName("${filePath}")
+objFolderItem.InvokeVerb("Install")`
+  const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs')
+  await fs.writeFile(vbsFilePath, vbs)
+  await exec.exec('cscript.exe', [vbsFilePath])
 }
 
 async function installGithubFont(font: GithubFont): Promise<void[]> {

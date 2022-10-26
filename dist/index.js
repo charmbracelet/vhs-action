@@ -402,7 +402,8 @@ const githubFonts = [
 ];
 const fontPath = {
     linux: `${os.homedir()}/.local/share/fonts`,
-    darwin: `${os.homedir()}/Library/Fonts`
+    darwin: `${os.homedir()}/Library/Fonts`,
+    win32: '%LocalAppData%\\Microsoft\\Windows\\Fonts'
 };
 const token = core.getInput('token');
 const octo = github.getOctokit(token);
@@ -446,21 +447,17 @@ function installFonts(dir) {
         })));
     });
 }
-// based on https://superuser.com/a/201899/985112
-function installWindowsFont(file) {
+// based on https://superuser.com/a/201899/985112 &&
+// https://stackoverflow.com/questions/46597891/calling-vbscript-from-powershell-is-this-right-way-to-do-it
+function installWindowsFont(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield exec.exec('Set', ['objShell', '=', 'CreateObject("Shell.Application")']);
-        yield exec.exec('Set', [
-            'objFolder',
-            '=',
-            'objShell.Namespace("C:\\Windows\\Font")'
-        ]);
-        yield exec.exec('Set', [
-            'objFolderItem',
-            '=',
-            `objFolder.ParseName("${file}")`
-        ]);
-        yield exec.exec('objFolderItem.InvokeVerb("Install")');
+        const vbs = `Set objShell = CreateObject("Shell.Application")
+Set objFolder = objShell.Namespace("${fontPath.win32}")
+Set objFolderItem = objFolder.ParseName("${filePath}")
+objFolderItem.InvokeVerb("Install")`;
+        const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs');
+        yield fs.writeFile(vbsFilePath, vbs);
+        yield exec.exec('cscript.exe', [vbsFilePath]);
     });
 }
 function installGithubFont(font) {

@@ -36,12 +36,12 @@ jobs:
         with:
           name: vhs-${{ matrix.os }}
           path: vhs.*
-      - name: List Fonts
+      - name: List Fonts - Ubuntu
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: fc-list | sort
-      - name: List Fonts
+      - name: List Fonts - MacOS
         if: ${{ matrix.os == 'macOS-latest' }}
-        run: system_profiler SPFontsDataType | grep -E '.ttf:$|.otf:$' | sort
-      - name: List Fonts
+        run: system_profiler SPFontsDataType | grep -E '.ttf$' | sort
+      - name: List Fonts - Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: dir C:\\Windows\\Fonts
