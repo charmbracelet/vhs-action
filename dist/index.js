@@ -408,12 +408,19 @@ const fontPath = {
 const token = core.getInput('token');
 const octo = github.getOctokit(token);
 const osPlatform = os.platform();
+const ps1Install = `$fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
+Get-ChildItem -Recurse -include *.ttf | % { $fonts.CopyHere($_.fullname) }`;
+const ps1InstallPath = path.join(os.homedir(), 'install.ps1');
 function install() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing fonts...`);
         if (osPlatform === 'linux' || osPlatform === 'darwin') {
             core.debug(`Creating font directory ${fontPath[osPlatform]}`);
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
+        }
+        if (osPlatform === 'win32') {
+            // Create the install script
+            yield fs.writeFile(ps1InstallPath, ps1Install);
         }
         for (const font of googleFonts) {
             yield installGoogleFont(font);
@@ -431,6 +438,9 @@ exports.install = install;
 function installFonts(dir) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = (yield fs.readdir(dir)).filter(file => file.endsWith('.ttf'));
+        if (osPlatform === 'win32') {
+            return installWindowsFont(path.resolve(dir)).then(() => []);
+        }
         return Promise.all(files.map((file) => __awaiter(this, void 0, void 0, function* () {
             const filename = path.basename(file);
             const absolutePath = path.resolve(dir, filename);
@@ -439,44 +449,19 @@ function installFonts(dir) {
                 case 'darwin': {
                     return fs.copyFile(absolutePath, path.join(fontPath[osPlatform], filename));
                 }
-                case 'win32': {
-                    return installWindowsFont(absolutePath);
-                }
             }
             return Promise.reject(new Error('Unsupported platform'));
         })));
     });
 }
-// based on https://superuser.com/a/201899/985112 &&
-// https://stackoverflow.com/questions/46597891/calling-vbscript-from-powershell-is-this-right-way-to-do-it
+// based on https://superuser.com/a/788759/985112
 function installWindowsFont(dirPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        //   $fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
-        // Get-ChildItem -Recurse -include *.ttf | % { $fonts.CopyHere($_.fullname) }
-        yield exec.getExecOutput('$fonts', ['(New-Object', '-ComObject', 'Shell.Application).Namespace(0x14)'], {
+        const out = yield exec.getExecOutput('powershell.exe', ['-ExecutionPolicy', 'Bypass', ps1InstallPath], {
             cwd: dirPath
         });
-        yield exec.getExecOutput('Get-ChildItem', [
-            '-Recurse',
-            '-include',
-            '*.ttf',
-            '|',
-            '%',
-            '{',
-            '$fonts.CopyHere($_.fullname)',
-            '}'
-        ], {
-            cwd: dirPath
-        });
-        //   const vbs = `Set objShell = CreateObject("Shell.Application")
-        // Set objFolder = objShell.Namespace("${fontPath.win32}")
-        // Set objFolderItem = objFolder.ParseName("${dirPath}")
-        // objFolderItem.InvokeVerb("Install")
-        // `
-        //   core.debug(`Writing vbscript ` + '`' + `${vbs}` + '`')
-        //   const vbsFilePath = path.join(os.tmpdir(), 'install-font.vbs')
-        //   await fs.writeFile(vbsFilePath, vbs)
-        //   await exec.exec('cscript.exe', [vbsFilePath])
+        core.debug(`Running PS1 install script for ${dirPath}`);
+        core.debug(out.stdout);
     });
 }
 function installGithubFont(font) {
