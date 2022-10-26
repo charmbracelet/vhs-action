@@ -469,9 +469,6 @@ function installGithubFont(font) {
         const cacheDir = tc.find(font.repo, 'latest');
         if (cacheDir) {
             core.info(`Found cached version of ${font.repo}`);
-            for (const file of yield fs.readdir(cacheDir)) {
-                core.debug(`Found cached ${file}`);
-            }
             return installFonts(cacheDir);
         }
         const release = yield octo.rest.repos.getLatestRelease({
@@ -492,9 +489,6 @@ function installGithubFont(font) {
                     return sanitizeSpecial(p, asset);
                 });
                 const cacheDir = yield tc.cacheDir(path.join(unzipPath, ...staticPath), font.repo, 'latest');
-                for (const file of yield fs.readdir(cacheDir)) {
-                    core.debug(`Found file ${file}`);
-                }
                 return installFonts(cacheDir);
             }
         }
@@ -509,18 +503,12 @@ function installGoogleFont(font) {
         let cacheDir = tc.find(fontCacheName, 'latest');
         if (cacheDir) {
             core.info(`Found cached version of ${font.name}`);
-            for (const file of yield fs.readdir(cacheDir)) {
-                core.debug(`Found cached ${file}`);
-            }
             return installFonts(cacheDir);
         }
         core.info(`Downloading ${font.name}`);
         const zipPath = yield tc.downloadTool(`https://fonts.google.com/download?family=${escapedName}`, '', token);
         const unzipPath = yield tc.extractZip(zipPath);
         cacheDir = yield tc.cacheDir(path.join(unzipPath, ...font.staticPath), fontCacheName, 'latest');
-        for (const file of yield fs.readdir(cacheDir)) {
-            core.debug(`Found file ${file}`);
-        }
         return installFonts(cacheDir);
     });
 }
