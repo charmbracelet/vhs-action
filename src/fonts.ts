@@ -59,7 +59,7 @@ const githubFonts: GithubFont[] = [
     repo: 'dejavu-fonts',
     assetStartsWith: 'dejavu-fonts-ttf',
     assetEndsWith: '.zip',
-    staticPath: ['%assetName%', 'ttf']
+    staticPath: ['%assetNameName%', 'ttf']
   },
   {
     owner: 'tonsky',
