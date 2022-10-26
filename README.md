@@ -20,6 +20,10 @@ The version of VHS to use. Default `"latest"`.
 
 The GitHub token to use. Default `"${{ github.token }}"`.
 
+### `install-fonts`
+
+Whether to install fonts. Default `"true"`.
+
 ## Example
 
 Auto commit new GIFs on tape change:
@@ -50,6 +54,32 @@ jobs:
           commit_author: vhs-action 📼 <actions@github.com>
           file_pattern: '*.gif'
 ```
+
+## Fonts
+
+The action installs a few fonts by default.
+
+* Bitstream Vera Sans Mono Nerd
+* DejaVu
+* DejaVu Sans Mono Nerd
+* Fira Code
+* Fira Code Nerd
+* Hack
+* Hack Nerd
+* IBM Plex Mono Nerd
+* Inconsolata
+* Inconsolata Nerd
+* InconsolataGo Nerd
+* JetBrains Mono
+* JetBrains Mono Nerd
+* Liberation
+* Liberation Mono Nerd
+* Noto Sans Mono
+* Roboto Mono
+* Source Code Pro
+* Source Code Pro Nerd
+* Ubuntu Mono
+* Ubuntu Mono Nerd
 
 ***
 

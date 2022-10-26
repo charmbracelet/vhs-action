@@ -10,6 +10,9 @@ const specialNames = {
   '%assetNameName%': (asset: {name: string}) => path.parse(asset.name).name
 }
 
+// Nerd Font asset name
+type NerdFont = string
+
 interface GithubFont {
   owner: string
   repo: string
@@ -22,6 +25,20 @@ interface GoogleFont {
   name: string
   staticPath: string[]
 }
+
+const nerdFonts = [
+  'BitstreamVeraSansMono.zip',
+  'DejaVuSansMono.zip',
+  'FiraCode.zip',
+  'Hack.zip',
+  'IBMPlexMono.zip',
+  'Inconsolata.zip',
+  'InconsolataGo.zip',
+  'JetBrainsMono.zip',
+  'LiberationMono.zip',
+  'SourceCodePro.zip',
+  'UbuntuMono.zip'
+]
 
 const googleFonts: GoogleFont[] = [
   {
@@ -114,6 +131,9 @@ export async function install(): Promise<void> {
   for (const font of githubFonts) {
     await installGithubFont(font)
   }
+  for (const font of await installNerdFonts(nerdFonts)) {
+    await font
+  }
   await liberation()
   if (osPlatform === 'linux') {
     await exec.exec('fc-cache', ['-f', '-v'])
@@ -193,6 +213,36 @@ async function installGithubFont(font: GithubFont): Promise<void[]> {
     }
   }
   return Promise.reject(new Error(`Could not find ${font.repo}`))
+}
+
+async function installNerdFonts(fonts: NerdFont[]): Promise<Promise<void[]>[]> {
+  const release = await octo.rest.repos.getLatestRelease({
+    owner: 'ryanoasis',
+    repo: 'nerd-fonts'
+  })
+  const rv: Promise<void[]>[] = []
+  for (const asset of release.data.assets) {
+    const url = asset.url
+    const name = asset.name
+    if (fonts.includes(name)) {
+      const font = path.parse(name).name
+      core.info(`Installing ${font}`)
+      let cacheDir = tc.find(`${font}-nerd`, 'latest')
+      if (cacheDir) {
+        core.info(`Found cached version of ${font}`)
+        rv.push(installFonts(cacheDir))
+        continue
+      }
+      core.info(`Downloading ${font}`)
+      const zipPath = await tc.downloadTool(url, '', `token ${token}`, {
+        accept: 'application/octet-stream'
+      })
+      const unzipPath = await tc.extractZip(zipPath)
+      cacheDir = await tc.cacheDir(unzipPath, `${font}-nerd`, 'latest')
+      rv.push(installFonts(cacheDir))
+    }
+  }
+  return rv
 }
 
 async function installGoogleFont(font: GoogleFont): Promise<void[]> {

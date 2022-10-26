@@ -8,7 +8,11 @@ async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
     const path = core.getInput('path')
-    await fonts.install()
+    const installFonts = core.getInput('install-fonts') === 'true'
+
+    if (installFonts) {
+      await fonts.install()
+    }
     await deps.install()
     const bin = await intaller.install(version)
 

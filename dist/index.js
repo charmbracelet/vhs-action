@@ -341,6 +341,19 @@ const github = __importStar(__nccwpck_require__(5438));
 const specialNames = {
     '%assetNameName%': (asset) => path.parse(asset.name).name
 };
+const nerdFonts = [
+    'BitstreamVeraSansMono.zip',
+    'DejaVuSansMono.zip',
+    'FiraCode.zip',
+    'Hack.zip',
+    'IBMPlexMono.zip',
+    'Inconsolata.zip',
+    'InconsolataGo.zip',
+    'JetBrainsMono.zip',
+    'LiberationMono.zip',
+    'SourceCodePro.zip',
+    'UbuntuMono.zip'
+];
 const googleFonts = [
     {
         name: 'Source Code Pro',
@@ -428,6 +441,9 @@ function install() {
         for (const font of githubFonts) {
             yield installGithubFont(font);
         }
+        for (const font of yield installNerdFonts(nerdFonts)) {
+            yield font;
+        }
         yield liberation();
         if (osPlatform === 'linux') {
             yield exec.exec('fc-cache', ['-f', '-v']);
@@ -495,6 +511,37 @@ function installGithubFont(font) {
             }
         }
         return Promise.reject(new Error(`Could not find ${font.repo}`));
+    });
+}
+function installNerdFonts(fonts) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const release = yield octo.rest.repos.getLatestRelease({
+            owner: 'ryanoasis',
+            repo: 'nerd-fonts'
+        });
+        const rv = [];
+        for (const asset of release.data.assets) {
+            const url = asset.url;
+            const name = asset.name;
+            if (fonts.includes(name)) {
+                const font = path.parse(name).name;
+                core.info(`Installing ${font}`);
+                let cacheDir = tc.find(`${font}-nerd`, 'latest');
+                if (cacheDir) {
+                    core.info(`Found cached version of ${font}`);
+                    rv.push(installFonts(cacheDir));
+                    continue;
+                }
+                core.info(`Downloading ${font}`);
+                const zipPath = yield tc.downloadTool(url, '', `token ${token}`, {
+                    accept: 'application/octet-stream'
+                });
+                const unzipPath = yield tc.extractZip(zipPath);
+                cacheDir = yield tc.cacheDir(unzipPath, `${font}-nerd`, 'latest');
+                rv.push(installFonts(cacheDir));
+            }
+        }
+        return rv;
     });
 }
 function installGoogleFont(font) {
@@ -739,7 +786,10 @@ function run() {
         try {
             const version = core.getInput('version');
             const path = core.getInput('path');
-            yield fonts.install();
+            const installFonts = core.getInput('install-fonts') === 'true';
+            if (installFonts) {
+                yield fonts.install();
+            }
             yield deps.install();
             const bin = yield intaller.install(version);
             yield exec.exec(`${bin} ${path}`);
