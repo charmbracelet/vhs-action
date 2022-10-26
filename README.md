@@ -8,64 +8,12 @@ GitHub Action to run [VHS][vhs].
 
 ## Inputs
 
-<table>
-
-<thead>
-  <tr>
-  <th>Name</th>
-  <th>Description</th>
-  <th>Default</th>
-  </tr>
-</thead>
-
-<tbody>
-<tr>
-<td>path</td>
-<td>Path of the VHS `.tape` file</td>
-<td>
-
-```
-"vhs.tape"
-```
-
-</td>
-</tr>
-<tr>
-<td>version</td>
-<td>Version of VHS to use</td>
-<td>
-
-```
-"latest"
-```
- 
-</td>
-</tr>
-<tr>
-<td>token</td>
-<td>GitHub token to use</td>
-<td>
-
-```
-"latest"
-```
- 
-</td>
-</tr>
-<tr>
-<td>install-fonts</td>
-<td>Whether to install fonts</td>
-<td>
-
-```
-"true"
-```
- 
-</td>
-</tr>
-
-</tbody>
-</table>
+Name            | Description                | Default
+--------------- | -------------------------- | ---------------------
+`path`          | Path of the VHS .tape file | ``"vhs.tape"``
+`version`       | Version of VHS to use      | ``"latest"``
+`token`         | GitHub token to use        | ``"${{ github.token }}"``
+`install-fonts` | Whether to install fonts   | ``"true"``
 
 ## Example Action
 
