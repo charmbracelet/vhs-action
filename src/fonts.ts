@@ -85,8 +85,8 @@ const githubFonts: GithubFont[] = [
 ]
 
 const fontPath = {
-  linux: '~/.local/share/fonts',
-  darwin: '~/Library/Fonts'
+  linux: '$HOME/.local/share/fonts',
+  darwin: '$HOME/Library/Fonts'
 }
 
 const token = core.getInput('token')
