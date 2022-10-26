@@ -7,6 +7,13 @@ import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as httpm from '@actions/http-client'
 
+export async function install(): Promise<void> {
+  core.info(`Installing dependencies...`)
+  await installTtyd()
+  await installLatestFfmpeg()
+  return Promise.resolve()
+}
+
 export async function installTtyd(version?: string): Promise<string> {
   core.info(`Installing ttyd ${version}...`)
 

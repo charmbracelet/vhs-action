@@ -1,4 +1,6 @@
 import * as intaller from './installer'
+import * as deps from './dependencies'
+import * as fonts from './fonts'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
@@ -6,7 +8,8 @@ async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
     const path = core.getInput('path')
-    await intaller.installDependencies()
+    await fonts.install()
+    await deps.install()
     const bin = await intaller.install(version)
 
     await exec.exec(`${bin} ${path}`)
