@@ -1,4 +1,4 @@
-name: 'VHS'
+name: 'VHS Action'
 description: 'Run VHS to render terminal videos'
 inputs:
   version:
