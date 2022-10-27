@@ -1,5 +1,8 @@
 name: 'VHS Action'
 description: 'Run VHS to render terminal videos'
+branding:
+  icon: film
+  color: purple
 inputs:
   version:
     description: VHS version
