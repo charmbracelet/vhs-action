@@ -90,7 +90,9 @@ variations) by default:
 * Fira Code
 * Hack
 * IBM Plex Mono
+* Inconsolata
 * JetBrains Mono
+* Liberation
 * Roboto Mono
 * Source Code Pro
 * Ubuntu Mono
