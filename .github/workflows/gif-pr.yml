@@ -7,7 +7,6 @@ on:
 
 jobs:
   gif-pr:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +21,7 @@ jobs:
           path: ./*.gif
           client_id: ${{ secrets.IMGUR_CLIENT_ID }}
       - uses: github-actions-up-and-running/pr-comment@v1.0.1
-        if: github.event_name == 'pull_request'
+        if: ${{ success() }}
         env:
           IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
           MESSAGE: |
