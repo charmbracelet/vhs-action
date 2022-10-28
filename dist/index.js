@@ -60,14 +60,14 @@ exports.install = install;
 function installTtyd(version) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Installing ttyd ${version}...`);
-        const osPlatform = os.platform();
-        const token = core.getInput('token');
-        const octo = github.getOctokit(token);
         if (!version) {
             version = 'latest';
         }
         version = version.replace(/^v/, '');
+        core.info(`Installing ttyd ${version}...`);
+        const osPlatform = os.platform();
+        const token = core.getInput('token');
+        const octo = github.getOctokit(token);
         const cacheFile = tc.find('ttyd', version);
         if (cacheFile) {
             core.info(`Found cached version ${version}`);
