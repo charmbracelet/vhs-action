@@ -15,15 +15,16 @@ export async function install(): Promise<void> {
 }
 
 export async function installTtyd(version?: string): Promise<string> {
+  if (!version) {
+    version = 'latest'
+  }
+  version = version.replace(/^v/, '')
+
   core.info(`Installing ttyd ${version}...`)
 
   const osPlatform = os.platform()
   const token = core.getInput('token')
   const octo = github.getOctokit(token)
-  if (!version) {
-    version = 'latest'
-  }
-  version = version.replace(/^v/, '')
   const cacheFile = tc.find('ttyd', version)
   if (cacheFile) {
     core.info(`Found cached version ${version}`)
