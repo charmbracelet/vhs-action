@@ -342,17 +342,40 @@ const specialNames = {
     '%assetNameName%': (asset) => path.parse(asset.name).name
 };
 const nerdFonts = [
-    'BitstreamVeraSansMono.zip',
-    'DejaVuSansMono.zip',
-    'FiraCode.zip',
-    'Hack.zip',
-    'IBMPlexMono.zip',
-    'Inconsolata.zip',
-    'InconsolataGo.zip',
-    'JetBrainsMono.zip',
-    'LiberationMono.zip',
-    'SourceCodePro.zip',
-    'UbuntuMono.zip'
+    {
+        name: 'JetBrainsMono.zip',
+        isDefault: true
+    },
+    {
+        name: 'BitstreamVeraSansMono.zip'
+    },
+    {
+        name: 'DejaVuSansMono.zip'
+    },
+    {
+        name: 'FiraCode.zip'
+    },
+    {
+        name: 'Hack.zip'
+    },
+    {
+        name: 'IBMPlexMono.zip'
+    },
+    {
+        name: 'Inconsolata.zip'
+    },
+    {
+        name: 'InconsolataGo.zip'
+    },
+    {
+        name: 'LiberationMono.zip'
+    },
+    {
+        name: 'SourceCodePro.zip'
+    },
+    {
+        name: 'UbuntuMono.zip'
+    }
 ];
 const googleFonts = [
     {
@@ -378,6 +401,14 @@ const googleFonts = [
 ];
 const githubFonts = [
     {
+        owner: 'JetBrains',
+        repo: 'JetBrainsMono',
+        isDefault: true,
+        assetStartsWith: 'JetBrainsMono',
+        assetEndsWith: '.zip',
+        staticPath: ['fonts', 'ttf']
+    },
+    {
         owner: 'dejavu-fonts',
         repo: 'dejavu-fonts',
         assetStartsWith: 'dejavu-fonts-ttf',
@@ -397,13 +428,6 @@ const githubFonts = [
         assetStartsWith: 'Hack',
         assetEndsWith: '-ttf.zip',
         staticPath: []
-    },
-    {
-        owner: 'JetBrains',
-        repo: 'JetBrainsMono',
-        assetStartsWith: 'JetBrainsMono',
-        assetEndsWith: '.zip',
-        staticPath: ['fonts', 'ttf']
     }
 ];
 const fontPath = {
@@ -411,6 +435,7 @@ const fontPath = {
     darwin: `${os.homedir()}/Library/Fonts`,
     win32: '%LocalAppData%\\Microsoft\\Windows\\Fonts'
 };
+const installExtraFonts = core.getInput('install-fonts') === 'true';
 const token = core.getInput('token');
 const octo = github.getOctokit(token);
 const osPlatform = os.platform();
@@ -419,7 +444,7 @@ Get-ChildItem -Recurse -include *.ttf | % { $fonts.CopyHere($_.fullname) }`;
 const ps1InstallPath = path.join(os.homedir(), 'install.ps1');
 function install() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Installing fonts...`);
+        core.info(`Installing ${installExtraFonts ? 'all' : 'default'} fonts...`);
         if (osPlatform === 'linux' || osPlatform === 'darwin') {
             core.debug(`Creating font directory ${fontPath[osPlatform]}`);
             yield fs.mkdir(fontPath[osPlatform], { recursive: true });
@@ -429,15 +454,23 @@ function install() {
             yield fs.writeFile(ps1InstallPath, ps1Install);
         }
         for (const font of googleFonts) {
-            yield installGoogleFont(font);
+            if (font.isDefault || installExtraFonts) {
+                yield installGoogleFont(font);
+            }
         }
         for (const font of githubFonts) {
-            yield installGithubFont(font);
+            if (font.isDefault || installExtraFonts) {
+                yield installGithubFont(font);
+            }
         }
-        for (const font of yield installNerdFonts(nerdFonts)) {
-            yield font;
+        for (const font of nerdFonts) {
+            if (font.isDefault || installExtraFonts) {
+                yield installNerdFont(font);
+            }
         }
-        yield liberation();
+        if (installExtraFonts) {
+            yield liberation();
+        }
         if (osPlatform === 'linux') {
             yield exec.exec('fc-cache', ['-f', '-v']);
         }
@@ -505,35 +538,37 @@ function installGithubFont(font) {
         return Promise.reject(new Error(`Could not find ${font.repo}`));
     });
 }
-function installNerdFonts(fonts) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let nerdFontsRelease;
+function installNerdFont(font) {
     return __awaiter(this, void 0, void 0, function* () {
-        const release = yield octo.rest.repos.getLatestRelease({
-            owner: 'ryanoasis',
-            repo: 'nerd-fonts'
-        });
-        const rv = [];
-        for (const asset of release.data.assets) {
+        if (!nerdFontsRelease) {
+            nerdFontsRelease = yield octo.rest.repos.getLatestRelease({
+                owner: 'ryanoasis',
+                repo: 'nerd-fonts'
+            });
+        }
+        const fontName = `${path.parse(font.name).name}-nerd`;
+        for (const asset of nerdFontsRelease.data.assets) {
             const url = asset.url;
             const name = asset.name;
-            if (fonts.includes(name)) {
-                const font = `${path.parse(name).name}-nerd`;
-                core.info(`Installing ${font}`);
-                let cacheDir = tc.find(font, 'latest');
+            if (font.name === name) {
+                core.info(`Installing ${fontName}`);
+                let cacheDir = tc.find(fontName, 'latest');
                 if (cacheDir) {
-                    core.info(`Found cached version of ${font}`);
-                    rv.push(installFonts(cacheDir));
-                    continue;
+                    core.info(`Found cached version of ${fontName}`);
+                    return installFonts(cacheDir);
                 }
-                core.info(`Downloading ${font}`);
+                core.info(`Downloading ${fontName}`);
                 const zipPath = yield tc.downloadTool(url, '', `token ${token}`, {
                     accept: 'application/octet-stream'
                 });
                 const unzipPath = yield tc.extractZip(zipPath);
-                cacheDir = yield tc.cacheDir(unzipPath, font, 'latest');
-                rv.push(installFonts(cacheDir));
+                cacheDir = yield tc.cacheDir(unzipPath, fontName, 'latest');
+                return installFonts(cacheDir);
             }
         }
-        return rv;
+        return Promise.reject(new Error(`Could not find ${fontName}`));
     });
 }
 function installGoogleFont(font) {
@@ -779,12 +814,9 @@ function run() {
         try {
             const version = core.getInput('version');
             const path = core.getInput('path');
-            const installFonts = core.getInput('install-fonts') === 'true';
             fs.accessSync(path, fs.constants.F_OK);
             fs.accessSync(path, fs.constants.R_OK);
-            if (installFonts) {
-                yield fonts.install();
-            }
+            yield fonts.install();
             yield deps.install();
             const bin = yield intaller.install(version);
             yield exec.exec(`${bin} ${path}`);
