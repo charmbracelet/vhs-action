@@ -768,6 +768,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const fs = __importStar(__nccwpck_require__(7147));
 const intaller = __importStar(__nccwpck_require__(1480));
 const deps = __importStar(__nccwpck_require__(6031));
 const fonts = __importStar(__nccwpck_require__(119));
@@ -779,6 +780,8 @@ function run() {
             const version = core.getInput('version');
             const path = core.getInput('path');
             const installFonts = core.getInput('install-fonts') === 'true';
+            fs.accessSync(path, fs.constants.F_OK);
+            fs.accessSync(path, fs.constants.R_OK);
             if (installFonts) {
                 yield fonts.install();
             }

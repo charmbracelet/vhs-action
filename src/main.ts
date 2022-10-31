@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import * as intaller from './installer'
 import * as deps from './dependencies'
 import * as fonts from './fonts'
@@ -10,6 +11,8 @@ async function run(): Promise<void> {
     const path = core.getInput('path')
     const installFonts = core.getInput('install-fonts') === 'true'
 
+    fs.accessSync(path, fs.constants.F_OK)
+    fs.accessSync(path, fs.constants.R_OK)
     if (installFonts) {
       await fonts.install()
     }
