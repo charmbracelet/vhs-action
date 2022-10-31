@@ -2,6 +2,8 @@ name: update gif
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '*.tape'
   workflow_dispatch:
