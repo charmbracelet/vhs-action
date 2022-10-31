@@ -11,7 +11,10 @@ const specialNames = {
 }
 
 // Nerd Font asset name
-type NerdFont = string
+interface NerdFont {
+  name: string
+  isDefault?: boolean
+}
 
 interface GithubFont {
   owner: string
@@ -19,25 +22,50 @@ interface GithubFont {
   assetStartsWith: string
   assetEndsWith: string
   staticPath: string[]
+  isDefault?: boolean
 }
 
 interface GoogleFont {
   name: string
   staticPath: string[]
+  isDefault?: boolean
 }
 
 const nerdFonts = [
-  'BitstreamVeraSansMono.zip',
-  'DejaVuSansMono.zip',
-  'FiraCode.zip',
-  'Hack.zip',
-  'IBMPlexMono.zip',
-  'Inconsolata.zip',
-  'InconsolataGo.zip',
-  'JetBrainsMono.zip',
-  'LiberationMono.zip',
-  'SourceCodePro.zip',
-  'UbuntuMono.zip'
+  {
+    name: 'JetBrainsMono.zip',
+    isDefault: true
+  },
+  {
+    name: 'BitstreamVeraSansMono.zip'
+  },
+  {
+    name: 'DejaVuSansMono.zip'
+  },
+  {
+    name: 'FiraCode.zip'
+  },
+  {
+    name: 'Hack.zip'
+  },
+  {
+    name: 'IBMPlexMono.zip'
+  },
+  {
+    name: 'Inconsolata.zip'
+  },
+  {
+    name: 'InconsolataGo.zip'
+  },
+  {
+    name: 'LiberationMono.zip'
+  },
+  {
+    name: 'SourceCodePro.zip'
+  },
+  {
+    name: 'UbuntuMono.zip'
+  }
 ]
 
 const googleFonts: GoogleFont[] = [
@@ -65,6 +93,14 @@ const googleFonts: GoogleFont[] = [
 
 const githubFonts: GithubFont[] = [
   {
+    owner: 'JetBrains',
+    repo: 'JetBrainsMono',
+    isDefault: true,
+    assetStartsWith: 'JetBrainsMono',
+    assetEndsWith: '.zip',
+    staticPath: ['fonts', 'ttf']
+  },
+  {
     owner: 'dejavu-fonts',
     repo: 'dejavu-fonts',
     assetStartsWith: 'dejavu-fonts-ttf',
@@ -84,13 +120,6 @@ const githubFonts: GithubFont[] = [
     assetStartsWith: 'Hack',
     assetEndsWith: '-ttf.zip',
     staticPath: []
-  },
-  {
-    owner: 'JetBrains',
-    repo: 'JetBrainsMono',
-    assetStartsWith: 'JetBrainsMono',
-    assetEndsWith: '.zip',
-    staticPath: ['fonts', 'ttf']
   }
 ]
 
@@ -100,6 +129,7 @@ const fontPath = {
   win32: '%LocalAppData%\\Microsoft\\Windows\\Fonts'
 }
 
+const installExtraFonts = core.getInput('install-fonts') === 'true'
 const token = core.getInput('token')
 const octo = github.getOctokit(token)
 const osPlatform: string = os.platform()
@@ -109,7 +139,7 @@ Get-ChildItem -Recurse -include *.ttf | % { $fonts.CopyHere($_.fullname) }`
 const ps1InstallPath = path.join(os.homedir(), 'install.ps1')
 
 export async function install(): Promise<void> {
-  core.info(`Installing fonts...`)
+  core.info(`Installing ${installExtraFonts ? 'all' : 'default'} fonts...`)
   if (osPlatform === 'linux' || osPlatform === 'darwin') {
     core.debug(`Creating font directory ${fontPath[osPlatform]}`)
     await fs.mkdir(fontPath[osPlatform], {recursive: true})
@@ -119,15 +149,23 @@ export async function install(): Promise<void> {
     await fs.writeFile(ps1InstallPath, ps1Install)
   }
   for (const font of googleFonts) {
-    await installGoogleFont(font)
+    if (font.isDefault || installExtraFonts) {
+      await installGoogleFont(font)
+    }
   }
   for (const font of githubFonts) {
-    await installGithubFont(font)
+    if (font.isDefault || installExtraFonts) {
+      await installGithubFont(font)
+    }
   }
-  for (const font of await installNerdFonts(nerdFonts)) {
-    await font
+  for (const font of nerdFonts) {
+    if (font.isDefault || installExtraFonts) {
+      await installNerdFont(font)
+    }
   }
-  await liberation()
+  if (installExtraFonts) {
+    await liberation()
+  }
   if (osPlatform === 'linux') {
     await exec.exec('fc-cache', ['-f', '-v'])
   }
@@ -207,34 +245,37 @@ async function installGithubFont(font: GithubFont): Promise<void[]> {
   return Promise.reject(new Error(`Could not find ${font.repo}`))
 }
 
-async function installNerdFonts(fonts: NerdFont[]): Promise<Promise<void[]>[]> {
-  const release = await octo.rest.repos.getLatestRelease({
-    owner: 'ryanoasis',
-    repo: 'nerd-fonts'
-  })
-  const rv: Promise<void[]>[] = []
-  for (const asset of release.data.assets) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let nerdFontsRelease: any | undefined
+
+async function installNerdFont(font: NerdFont): Promise<void[]> {
+  if (!nerdFontsRelease) {
+    nerdFontsRelease = await octo.rest.repos.getLatestRelease({
+      owner: 'ryanoasis',
+      repo: 'nerd-fonts'
+    })
+  }
+  const fontName = `${path.parse(font.name).name}-nerd`
+  for (const asset of nerdFontsRelease.data.assets) {
     const url = asset.url
     const name = asset.name
-    if (fonts.includes(name)) {
-      const font = `${path.parse(name).name}-nerd`
-      core.info(`Installing ${font}`)
-      let cacheDir = tc.find(font, 'latest')
+    if (font.name === name) {
+      core.info(`Installing ${fontName}`)
+      let cacheDir = tc.find(fontName, 'latest')
       if (cacheDir) {
-        core.info(`Found cached version of ${font}`)
-        rv.push(installFonts(cacheDir))
-        continue
+        core.info(`Found cached version of ${fontName}`)
+        return installFonts(cacheDir)
       }
-      core.info(`Downloading ${font}`)
+      core.info(`Downloading ${fontName}`)
       const zipPath = await tc.downloadTool(url, '', `token ${token}`, {
         accept: 'application/octet-stream'
       })
       const unzipPath = await tc.extractZip(zipPath)
-      cacheDir = await tc.cacheDir(unzipPath, font, 'latest')
-      rv.push(installFonts(cacheDir))
+      cacheDir = await tc.cacheDir(unzipPath, fontName, 'latest')
+      return installFonts(cacheDir)
     }
   }
-  return rv
+  return Promise.reject(new Error(`Could not find ${fontName}`))
 }
 
 async function installGoogleFont(font: GoogleFont): Promise<void[]> {
