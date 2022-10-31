@@ -48,3 +48,22 @@ jobs:
         run: |
           [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
           (New-Object System.Drawing.Text.InstalledFontCollection).Families
+
+  fonts:
+    runs-on: ubuntu-latest
+    # dependabot-created PRs cant see any secrets, so this workflow wont work anyway https://github.com/dependabot/dependabot-core/issues/3253
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: ./
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          install-fonts: true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: vhs-fonts-${{ matrix.os }}
+          path: vhs.*
+      - name: List Fonts - Ubuntu
+        run: fc-list | sort
