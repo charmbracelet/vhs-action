@@ -9,13 +9,10 @@ async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
     const path = core.getInput('path')
-    const installFonts = core.getInput('install-fonts') === 'true'
 
     fs.accessSync(path, fs.constants.F_OK)
     fs.accessSync(path, fs.constants.R_OK)
-    if (installFonts) {
-      await fonts.install()
-    }
+    await fonts.install()
     await deps.install()
     const bin = await intaller.install(version)
 

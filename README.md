@@ -8,12 +8,12 @@ GitHub Action to run [VHS][vhs].
 
 ## Inputs
 
-Name            | Description                | Default
---------------- | -------------------------- | ---------------------
-`path`          | Path of the VHS .tape file | ``"vhs.tape"``
-`version`       | Version of VHS to use      | ``"latest"``
-`token`         | GitHub token to use        | ``"${{ github.token }}"``
-`install-fonts` | Whether to install fonts   | ``"true"``
+Name                  | Description                      | Default
+---------------       | --------------------------       | ---------------------
+`path`                | Path of the VHS .tape file       | ``"vhs.tape"``
+`version`             | Version of VHS to use            | ``"latest"``
+`token`               | GitHub token to use              | ``"${{ github.token }}"``
+`install-fonts`       | Whether to install extra fonts   | ``"false"``
 
 ## Example Action
 
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: charmbracelet/vhs-action@main
+      - uses: charmbracelet/vhs-action@v1
         with:
           path: 'vhs.tape'
       - uses: stefanzweifel/git-auto-commit-action@v4
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: charmbracelet/vhs-action@main
+      - uses: charmbracelet/vhs-action@v1
         with:
           path: 'vhs.tape'
       - uses: devicons/public-upload-to-imgur@v2.2.2
@@ -80,8 +80,9 @@ jobs:
 
 ## Available Fonts
 
-The action will provide the following fonts (and their [nerd font](nerdfonts)
-variations) by default:
+The action provides `JetBrains Mono` by default. Extra fonts (and their
+[nerd font](nerdfonts) variations) can be installed by setting `install-fonts`
+to `true`. Extra fonts include:
 
 [nerdfonts]: https://www.nerdfonts.com
 
@@ -91,7 +92,6 @@ variations) by default:
 * Hack
 * IBM Plex Mono
 * Inconsolata
-* JetBrains Mono
 * Liberation
 * Roboto Mono
 * Source Code Pro

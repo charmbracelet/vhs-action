@@ -14,8 +14,8 @@ inputs:
     description: Used to pull VHS from Github
     default: ${{ github.token }}
   install-fonts:
-    description: Install
-    default: 'true'
+    description: Install extra fonts
+    default: 'false'
 
 runs:
   using: 'node16'
