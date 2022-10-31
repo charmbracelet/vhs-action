@@ -5,16 +5,19 @@ on:
     paths:
       - 'vhs.tape'
 
+permissions:
+  contents: write
+
 jobs:
   gif-pr:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: devicons/public-upload-to-imgur@v2.2.2
         id: imgur_step
         with:

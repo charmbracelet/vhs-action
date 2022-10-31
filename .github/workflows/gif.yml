@@ -14,16 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: stefanzweifel/git-auto-commit-action@v4
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          commit_message: Update generated VHS GIF
+          commit_message: 'chore: update generated VHS GIF'
           branch: main
           commit_user_name: vhs-action 📼
           commit_user_email: actions@github.com

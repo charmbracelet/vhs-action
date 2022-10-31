@@ -13,6 +13,9 @@ on:
       - 'releases/v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
@@ -28,10 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v3
         with:
           name: vhs-${{ matrix.os }}
@@ -56,10 +59,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           install-fonts: true
       - uses: actions/upload-artifact@v3
         with:
