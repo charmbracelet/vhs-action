@@ -1,0 +1,26 @@
+name: comment gif
+on:
+  pull_request:
+    paths:
+      - vhs.tape
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: charmbracelet/vhs-action@v1
+        with:
+          path: 'vhs.tape'
+      - uses: devicons/public-upload-to-imgur@v2.2.2
+        id: imgur_step
+        with:
+          path: ./vhs.gif
+          client_id: ${{ secrets.IMGUR_CLIENT_ID }} # Make sure you have this secret set in your repo
+      - uses: github-actions-up-and-running/pr-comment@v1.0.1
+        env:
+          IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
+          MESSAGE: |
+            ![VHS GIf]({0})
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
