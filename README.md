@@ -1,101 +1,33 @@
 # VHS Action
 
-GitHub Action to run [VHS][vhs].
+Keep your GIFs up to date with VHS + GitHub actions 📽️
+
+![vhs-action-banner](https://user-images.githubusercontent.com/42545625/199841157-0f20a0a3-1ae3-44cb-9b76-7f98cc84b9b0.png)
 
 <img alt="Welcome to VHS!" src="vhs.gif" width="600" />
 
+The above GIF is automatically generated on CI with GitHub actions and VHS.
+
 [vhs]: https://github.com/charmbracelet/vhs
 
-## Inputs
+## Getting Started
 
-Name                  | Description                      | Default
----------------       | --------------------------       | ---------------------
-`path`                | Path of the VHS .tape file       | ``"vhs.tape"``
-`version`             | Version of VHS to use            | ``"latest"``
-`token`               | GitHub token to use              | ``"${{ github.token }}"``
-`install-fonts`       | Whether to install extra fonts   | ``"false"``
+To get started with GitHub actions you can [read the documentation](https://docs.github.com/en/actions).
 
-## Example Action
+To add `vhs-action` to your project you will need to:
 
-The following is a workflow that uses VHS to generate new GIFs (from
- `vhs.tape`) and then auto commits the GIF file to the repository.
+1. Create `.github/workflows/vhs.yml` in your project directory.
+2. Copy one of the [`examples/`](./examples/) into your `vhs.yml`.
+3. Create your `vhs.tape` file with the instructions to perform (See [VHS](https://github.com/charmbracelet/vhs) instructions on `.tape` files)
+4. Trigger your action by creating a pull request or making a commit depending on your `vhs.yml` file.
 
-```yaml
-name: vhs
-on:
-  push:
-    paths:
-      - vhs.tape
-jobs:
-  vhs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: charmbracelet/vhs-action@v1
-        with:
-          path: 'vhs.tape'
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          commit_message: Update generated VHS GIF
-          branch: main
-          commit_user_name: vhs-action 📼
-          commit_user_email: actions@github.com
-          commit_author: vhs-action 📼 <actions@github.com>
-          file_pattern: '*.gif'
-```
+That's all! Anytime the action is triggered, GitHub actions and VHS will regenerate the GIF from your `.tape` file on CI.
+This is useful for keeping demos updated and performing integration testing to catch errors in your PRs.
 
-Upload GIF to Imgur and comment in PR.
+## Examples
 
-```yaml
-name: comment gif
-on:
-  pull_request:
-    paths:
-      - vhs.tape
-jobs:
-  pr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: charmbracelet/vhs-action@v1
-        with:
-          path: 'vhs.tape'
-      - uses: devicons/public-upload-to-imgur@v2.2.2
-        id: imgur_step
-        with:
-          path: ./vhs.gif
-          client_id: ${{ secrets.IMGUR_CLIENT_ID }} # Make sure you have this secret set in your repo
-      - uses: github-actions-up-and-running/pr-comment@v1.0.1
-        env:
-          IMG_URL: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls)[0] }}
-          MESSAGE: |
-            ![VHS GIf]({0})
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format(env.MESSAGE, env.IMG_URL) }}
-
-```
-
-## Available Fonts
-
-The action provides `JetBrains Mono` by default. Extra fonts (and their
-[nerd font](nerdfonts) variations) can be installed by setting `install-fonts`
-to `true`. Extra fonts include:
-
-[nerdfonts]: https://www.nerdfonts.com
-
-* Bitstream Vera Sans Mono
-* DejaVu
-* Fira Code
-* Hack
-* IBM Plex Mono
-* Inconsolata
-* Liberation
-* Roboto Mono
-* Source Code Pro
-* Ubuntu Mono
+* Auto-commit latest generated GIF file ([example](./examples/auto-commit.yml))
+* Upload GIF to host and comment generated GIF on a pull request ([example](./examples/comment-pr.yml))
 
 ## Feedback
 
