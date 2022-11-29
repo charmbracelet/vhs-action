@@ -2,7 +2,7 @@
 
 Keep your GIFs up to date with VHS + GitHub actions 📽️
 
-![vhs-action-banner](https://user-images.githubusercontent.com/42545625/199841157-0f20a0a3-1ae3-44cb-9b76-7f98cc84b9b0.png)
+![vhs-action-banner](https://stuff.charm.sh/vhs/vhs-action-banner.png)
 
 <img alt="Welcome to VHS!" src="vhs.gif" width="600" />
 
