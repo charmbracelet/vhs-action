@@ -1,7 +1,6 @@
 on:
-  push:
-    tags:
-      - v*
+  release:
+    types: [published, edited]
 jobs:
   tag:
     runs-on: ubuntu-latest
