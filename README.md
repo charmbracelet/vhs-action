@@ -8,8 +8,6 @@ Keep your GIFs up to date with VHS + GitHub actions 📽️
 
 The above GIF is automatically generated on CI with GitHub actions and VHS.
 
-[vhs]: https://github.com/charmbracelet/vhs
-
 ## Getting Started
 
 To get started with GitHub actions you can [read the documentation](https://docs.github.com/en/actions).
@@ -18,7 +16,7 @@ To add `vhs-action` to your project you will need to:
 
 1. Create `.github/workflows/vhs.yml` in your project directory.
 2. Copy one of the [`examples/`](./examples/) into your `vhs.yml`.
-3. Create your `vhs.tape` file with the instructions to perform (See [VHS](https://github.com/charmbracelet/vhs) instructions on `.tape` files)
+3. Create your `vhs.tape` file with the instructions to perform (See [VHS][vhs] instructions on `.tape` files)
 4. Trigger your action by creating a pull request or making a commit depending on your `vhs.yml` file.
 
 That's all! Anytime the action is triggered, GitHub actions and VHS will regenerate the GIF from your `.tape` file on CI.
@@ -32,6 +30,26 @@ Name                  | Description                      | Default
 `version`             | Version of VHS to use            | ``"latest"``
 `token`               | GitHub token to use              | ``"${{ github.token }}"``
 `install-fonts`       | Whether to install extra fonts   | ``"false"``
+
+The action provides `JetBrains Mono` by default. Extra fonts (and their
+[nerd font][nerdfonts] variations) can be installed by setting `install-fonts`
+to `true`.
+
+<details>
+<summary>Extra fonts</summary>
+
+* Bitstream Vera Sans Mono
+* DejaVu
+* Fira Code
+* Hack
+* IBM Plex Mono
+* Inconsolata
+* Liberation
+* Roboto Mono
+* Source Code Pro
+* Ubuntu Mono
+
+</details>
 
 ## Examples
 
@@ -63,3 +81,6 @@ Part of [Charm](https://charm.sh).
 </a>
 
 Charm热爱开源 • Charm loves open source
+
+[vhs]: https://github.com/charmbracelet/vhs
+[nerdfonts]: https://www.nerdfonts.com
