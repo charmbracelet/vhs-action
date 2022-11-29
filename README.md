@@ -24,6 +24,15 @@ To add `vhs-action` to your project you will need to:
 That's all! Anytime the action is triggered, GitHub actions and VHS will regenerate the GIF from your `.tape` file on CI.
 This is useful for keeping demos updated and performing integration testing to catch errors in your PRs.
 
+## Inputs
+
+Name                  | Description                      | Default
+---------------       | --------------------------       | ---------------------
+`path`                | Path of the VHS .tape file       | ``"vhs.tape"``
+`version`             | Version of VHS to use            | ``"latest"``
+`token`               | GitHub token to use              | ``"${{ github.token }}"``
+`install-fonts`       | Whether to install extra fonts   | ``"false"``
+
 ## Examples
 
 * Auto-commit latest generated GIF file ([example](./examples/auto-commit.yml))
