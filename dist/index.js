@@ -97,7 +97,7 @@ function installTtyd(version) {
         }
         switch (osPlatform) {
             case 'win32': {
-                url = (_a = release.data.assets.find(asset => asset.name.endsWith('win10.exe'))) === null || _a === void 0 ? void 0 : _a.browser_download_url;
+                url = (_a = release.data.assets.find(asset => asset.name.endsWith('win10.exe') || asset.name.endsWith('win32.exe'))) === null || _a === void 0 ? void 0 : _a.browser_download_url;
                 core.debug(`Installing ttyd ${version} on Windows from ${url}`);
                 break;
             }

@@ -54,8 +54,9 @@ export async function installTtyd(version?: string): Promise<string> {
   }
   switch (osPlatform) {
     case 'win32': {
-      url = release.data.assets.find(asset =>
-        asset.name.endsWith('win10.exe')
+      url = release.data.assets.find(
+        asset =>
+          asset.name.endsWith('win10.exe') || asset.name.endsWith('win32.exe')
       )?.browser_download_url
       core.debug(`Installing ttyd ${version} on Windows from ${url}`)
       break
