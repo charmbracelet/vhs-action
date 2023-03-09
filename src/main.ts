@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as path from 'path'
 import * as intaller from './installer'
 import * as deps from './dependencies'
 import * as fonts from './fonts'
@@ -8,15 +9,20 @@ import * as exec from '@actions/exec'
 async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
-    const path = core.getInput('path')
+    const filePath = core.getInput('path')
 
-    fs.accessSync(path, fs.constants.F_OK)
-    fs.accessSync(path, fs.constants.R_OK)
+    fs.accessSync(filePath, fs.constants.F_OK)
+    fs.accessSync(filePath, fs.constants.R_OK)
     await fonts.install()
     await deps.install()
     const bin = await intaller.install(version)
 
-    await exec.exec(`${bin} ${path}`)
+    core.debug('Adding VHS to PATH')
+    core.addPath(path.dirname(bin))
+
+    if (path) {
+      await exec.exec(`${bin} ${filePath}`)
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
