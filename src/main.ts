@@ -18,6 +18,10 @@ async function run(): Promise<void> {
     await deps.install()
     const bin = await intaller.install(version)
 
+    // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
+    // sequences.
+    core.exportVariable('CI', '')
+
     core.info('Adding VHS to PATH')
     core.addPath(path.dirname(bin))
 
