@@ -35,6 +35,10 @@ jobs:
       - uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - run: vhs -h
+        if: ${{ matrix.os != 'windows-latest' }}
+      - run: vhs.exe -h
+        if: ${{ matrix.os == 'windows-latest' }}
       - uses: actions/upload-artifact@v3
         with:
           name: vhs-${{ matrix.os }}
@@ -66,7 +70,7 @@ jobs:
           install-fonts: true
       - uses: actions/upload-artifact@v3
         with:
-          name: vhs-fonts-${{ matrix.os }}
+          name: vhs-fonts
           path: vhs.*
       - name: List Fonts - Ubuntu
         run: fc-list | sort

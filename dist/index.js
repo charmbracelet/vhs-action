@@ -804,6 +804,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs = __importStar(__nccwpck_require__(7147));
+const path = __importStar(__nccwpck_require__(1017));
 const intaller = __importStar(__nccwpck_require__(1480));
 const deps = __importStar(__nccwpck_require__(6031));
 const fonts = __importStar(__nccwpck_require__(119));
@@ -813,13 +814,24 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const version = core.getInput('version');
-            const path = core.getInput('path');
-            fs.accessSync(path, fs.constants.F_OK);
-            fs.accessSync(path, fs.constants.R_OK);
+            // set a default value to be backward compatible
+            const filePath = core.getInput('path') || 'vhs.tape';
+            fs.accessSync(filePath, fs.constants.F_OK);
+            fs.accessSync(filePath, fs.constants.R_OK);
             yield fonts.install();
             yield deps.install();
             const bin = yield intaller.install(version);
-            yield exec.exec(`${bin} ${path}`);
+            core.info('Adding VHS to PATH');
+            core.addPath(path.dirname(bin));
+            // If the file exists, run it
+            // Otherwise, just install the binary
+            if (fs.existsSync(filePath)) {
+                core.info('Running VHS');
+                yield exec.exec(`${bin} ${filePath}`);
+            }
+            else {
+                core.error(`File ${filePath} does not exist`);
+            }
         }
         catch (error) {
             if (error instanceof Error)
