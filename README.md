@@ -24,12 +24,12 @@ This is useful for keeping demos updated and performing integration testing to c
 
 ## Inputs
 
-Name                  | Description                      | Default
----------------       | --------------------------       | ---------------------
-`path`                | Path of the VHS .tape file       | ``"vhs.tape"``
-`version`             | Version of VHS to use            | ``"latest"``
-`token`               | GitHub token to use              | ``"${{ github.token }}"``
-`install-fonts`       | Whether to install extra fonts   | ``"false"``
+| Name            | Description                    | Default                 |
+| --------------- | ------------------------------ | ----------------------- |
+| `path`          | Path of the VHS .tape file     | `""`                    |
+| `version`       | Version of VHS to use          | `"latest"`              |
+| `token`         | GitHub token to use            | `"${{ github.token }}"` |
+| `install-fonts` | Whether to install extra fonts | `"false"`               |
 
 The action provides `JetBrains Mono` by default. Extra fonts (and their
 [nerd font][nerdfonts] variations) can be installed by setting `install-fonts`
@@ -38,37 +38,37 @@ to `true`.
 <details>
 <summary>Extra fonts</summary>
 
-* Bitstream Vera Sans Mono
-* DejaVu
-* Fira Code
-* Hack
-* IBM Plex Mono
-* Inconsolata
-* Liberation
-* Roboto Mono
-* Source Code Pro
-* Ubuntu Mono
+- Bitstream Vera Sans Mono
+- DejaVu
+- Fira Code
+- Hack
+- IBM Plex Mono
+- Inconsolata
+- Liberation
+- Roboto Mono
+- Source Code Pro
+- Ubuntu Mono
 
 </details>
 
 ## Examples
 
-* Auto-commit latest generated GIF file ([example](./examples/auto-commit.yml))
-* Upload GIF to host and comment generated GIF on a pull request ([example](./examples/comment-pr.yml))
+- Auto-commit latest generated GIF file ([example](./examples/auto-commit.yml))
+- Upload GIF to host and comment generated GIF on a pull request ([example](./examples/comment-pr.yml))
 
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
-* [Twitter](https://twitter.com/charmcli)
-* [The Fediverse](https://mastodon.social/@charmcli)
-* [Discord](https://charm.sh/chat)
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
 
 ## License
 
 [MIT](https://github.com/charmbracelet/vhs/raw/main/LICENSE)
 
-***
+---
 
 Part of [Charm](https://charm.sh).
 

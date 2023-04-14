@@ -9,7 +9,7 @@ inputs:
     default: latest
   path:
     description: 'The tape file path'
-    default: 'vhs.tape'
+    default: ''
   token:
     description: Used to pull VHS from Github
     default: ${{ github.token }}
