@@ -26,7 +26,7 @@ This is useful for keeping demos updated and performing integration testing to c
 
 | Name            | Description                                                                     | Default                 |
 | --------------- | ------------------------------------------------------------------------------- | ----------------------- |
-| `path`          | Path of the VHS .tape file; pass `"none"` to install VHS without running it     | `"tape.vhs"`            |
+| `path`          | Path of the VHS .tape file; pass `"none"` to install VHS without running it     | `"vhs.tape"`            |
 | `version`       | Version of VHS to use                                                           | `"latest"`              |
 | `token`         | GitHub token to use                                                             | `"${{ github.token }}"` |
 | `install-fonts` | Whether to install extra fonts                                                  | `"false"`               |
