@@ -11,9 +11,12 @@ async function run(): Promise<void> {
     const version = core.getInput('version')
     // set a default value to be backward compatible
     const filePath = core.getInput('path') || 'vhs.tape'
+    const installOnly = filePath == 'none'
 
-    fs.accessSync(filePath, fs.constants.F_OK)
-    fs.accessSync(filePath, fs.constants.R_OK)
+    if (!installOnly) {
+      fs.accessSync(filePath, fs.constants.F_OK)
+      fs.accessSync(filePath, fs.constants.R_OK)
+    }
     await fonts.install()
     await deps.install()
     const bin = await intaller.install(version)
@@ -27,11 +30,13 @@ async function run(): Promise<void> {
 
     // If the file exists, run it
     // Otherwise, just install the binary
-    if (fs.existsSync(filePath)) {
-      core.info('Running VHS')
-      await exec.exec(`${bin} ${filePath}`)
-    } else {
-      core.error(`File ${filePath} does not exist`)
+    if (!installOnly) {
+      if (fs.existsSync(filePath)) {
+        core.info('Running VHS')
+        await exec.exec(`${bin} ${filePath}`)
+      } else {
+        core.error(`File ${filePath} does not exist`)
+      }
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
