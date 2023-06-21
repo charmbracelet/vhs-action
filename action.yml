@@ -16,6 +16,9 @@ inputs:
   install-fonts:
     description: Install extra fonts
     default: 'false'
+  install-only:
+    description: Only install VHS without running it
+    default: 'false'
 
 runs:
   using: 'node16'
