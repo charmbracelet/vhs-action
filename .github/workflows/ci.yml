@@ -35,6 +35,7 @@ jobs:
       - uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          install-only: true
       - run: vhs -h
         if: ${{ matrix.os != 'windows-latest' }}
       - run: vhs.exe -h

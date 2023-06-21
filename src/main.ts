@@ -11,32 +11,33 @@ async function run(): Promise<void> {
     const version = core.getInput('version')
     // set a default value to be backward compatible
     const filePath = core.getInput('path') || 'vhs.tape'
-    const installOnly = filePath == 'none'
+    const installOnly = core.getInput('install-only') == 'true'
 
+    // Fail fast if file does not exist.
     if (!installOnly) {
-      fs.accessSync(filePath, fs.constants.F_OK)
-      fs.accessSync(filePath, fs.constants.R_OK)
+      if (!fs.existsSync(filePath)) {
+        core.error(`File ${filePath} does not exist`)
+      } else {
+        // Check that `filePath` is a file, and that we can read it.
+        fs.accessSync(filePath, fs.constants.F_OK)
+        fs.accessSync(filePath, fs.constants.R_OK)
+      }
     }
+
     await fonts.install()
     await deps.install()
     const bin = await intaller.install(version)
 
-    // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
-    // sequences.
-    core.exportVariable('CI', '')
-
     core.info('Adding VHS to PATH')
     core.addPath(path.dirname(bin))
 
-    // If the file exists, run it
-    // Otherwise, just install the binary
     if (!installOnly) {
-      if (fs.existsSync(filePath)) {
-        core.info('Running VHS')
-        await exec.exec(`${bin} ${filePath}`)
-      } else {
-        core.error(`File ${filePath} does not exist`)
-      }
+      // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
+      // sequences.
+      core.exportVariable('CI', '')
+
+      core.info('Running VHS')
+      await exec.exec(`${bin} ${filePath}`)
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
