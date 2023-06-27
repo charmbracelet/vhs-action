@@ -24,12 +24,12 @@ This is useful for keeping demos updated and performing integration testing to c
 
 ## Inputs
 
-| Name            | Description                                                                                       | Default                 |
-| --------------- | ------------------------------------------------------------------------------------------------- | ----------------------- |
-| `path`          | Path of the VHS `.tape` file. Passing an empty path (default) will install VHS without running it | `""`                    |
-| `version`       | Version of VHS to use                                                                             | `"latest"`              |
-| `token`         | GitHub token to use                                                                               | `"${{ github.token }}"` |
-| `install-fonts` | Whether to install extra fonts                                                                    | `"false"`               |
+| Name            | Description                    | Default                                                 |
+| --------------- | ------------------------------ | ------------------------------------------------------- |
+| `path`          | Path of the VHS `.tape` file   | `""` (install VHS without running it)                   |
+| `version`       | Version of VHS to use          | `"latest"`                                              |
+| `token`         | GitHub token to use            | `"${{ github.token }}"`                                 |
+| `install-fonts` | Whether to install extra fonts | `"false"`                                               |
 
 The action provides `JetBrains Mono` by default. Extra fonts (and their
 [nerd font][nerdfonts] variations) can be installed by setting `install-fonts`
