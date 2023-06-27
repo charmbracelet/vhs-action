@@ -16,7 +16,7 @@ To add `vhs-action` to your project you will need to:
 
 1. Create `.github/workflows/vhs.yml` in your project directory.
 2. Copy one of the [`examples/`](./examples/) into your `vhs.yml`.
-3. Create your `vhs.tape` file with the instructions to perform (See [VHS][vhs] instructions on `.tape` files)
+3. Create your tape files with the instructions to perform (See [VHS][vhs] instructions on `.tape` files)
 4. Trigger your action by creating a pull request or making a commit depending on your `vhs.yml` file.
 
 That's all! Anytime the action is triggered, GitHub actions and VHS will regenerate the GIF from your `.tape` file on CI.
@@ -24,13 +24,12 @@ This is useful for keeping demos updated and performing integration testing to c
 
 ## Inputs
 
-| Name            | Description                                              | Default                 |
-| --------------- | -------------------------------------------------------- | ----------------------- |
-| `path`          | Path of the VHS .tape file                               | `"vhs.tape"`            |
-| `version`       | Version of VHS to use                                    | `"latest"`              |
-| `token`         | GitHub token to use                                      | `"${{ github.token }}"` |
-| `install-fonts` | Whether to install extra fonts                           | `"false"`               |
-| `install-only`  | Only install VHS without running it (ignores `path`)     | `"false"`               |
+| Name            | Description                                                                                       | Default                 |
+| --------------- | ------------------------------------------------------------------------------------------------- | ----------------------- |
+| `path`          | Path of the VHS `.tape` file. Passing an empty path (default) will install VHS without running it | `""`                    |
+| `version`       | Version of VHS to use                                                                             | `"latest"`              |
+| `token`         | GitHub token to use                                                                               | `"${{ github.token }}"` |
+| `install-fonts` | Whether to install extra fonts                                                                    | `"false"`               |
 
 The action provides `JetBrains Mono` by default. Extra fonts (and their
 [nerd font][nerdfonts] variations) can be installed by setting `install-fonts`

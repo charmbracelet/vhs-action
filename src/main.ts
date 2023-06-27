@@ -9,12 +9,10 @@ import * as exec from '@actions/exec'
 async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
-    // set a default value to be backward compatible
-    const filePath = core.getInput('path') || 'vhs.tape'
-    const installOnly = core.getInput('install-only') == 'true'
+    const filePath = core.getInput('path')
 
     // Fail fast if file does not exist.
-    if (!installOnly) {
+    if (filePath) {
       if (!fs.existsSync(filePath)) {
         core.error(`File ${filePath} does not exist`)
       } else {
@@ -31,7 +29,7 @@ async function run(): Promise<void> {
     core.info('Adding VHS to PATH')
     core.addPath(path.dirname(bin))
 
-    if (!installOnly) {
+    if (filePath) {
       // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
       // sequences.
       core.exportVariable('CI', '')
