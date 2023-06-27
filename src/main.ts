@@ -29,11 +29,11 @@ async function run(): Promise<void> {
     core.info('Adding VHS to PATH')
     core.addPath(path.dirname(bin))
 
-    if (filePath) {
-      // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
-      // sequences.
-      core.exportVariable('CI', '')
+    // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
+    // sequences.
+    core.exportVariable('CI', '')
 
+    if (filePath) {
       core.info('Running VHS')
       await exec.exec(`${bin} ${filePath}`)
     }
