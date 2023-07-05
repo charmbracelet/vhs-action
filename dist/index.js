@@ -814,26 +814,29 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const version = core.getInput('version');
-            // set a default value to be backward compatible
-            const filePath = core.getInput('path') || 'vhs.tape';
-            fs.accessSync(filePath, fs.constants.F_OK);
-            fs.accessSync(filePath, fs.constants.R_OK);
+            const filePath = core.getInput('path');
+            // Fail fast if file does not exist.
+            if (filePath) {
+                if (!fs.existsSync(filePath)) {
+                    core.error(`File ${filePath} does not exist`);
+                }
+                else {
+                    // Check that `filePath` is a file, and that we can read it.
+                    fs.accessSync(filePath, fs.constants.F_OK);
+                    fs.accessSync(filePath, fs.constants.R_OK);
+                }
+            }
             yield fonts.install();
             yield deps.install();
             const bin = yield intaller.install(version);
+            core.info('Adding VHS to PATH');
+            core.addPath(path.dirname(bin));
             // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
             // sequences.
             core.exportVariable('CI', '');
-            core.info('Adding VHS to PATH');
-            core.addPath(path.dirname(bin));
-            // If the file exists, run it
-            // Otherwise, just install the binary
-            if (fs.existsSync(filePath)) {
+            if (filePath) {
                 core.info('Running VHS');
                 yield exec.exec(`${bin} ${filePath}`);
-            }
-            else {
-                core.error(`File ${filePath} does not exist`);
             }
         }
         catch (error) {
