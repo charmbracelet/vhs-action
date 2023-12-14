@@ -39,7 +39,7 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
       - run: vhs.exe -h
         if: ${{ matrix.os == 'windows-latest' }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: vhs-${{ matrix.os }}
           path: vhs.*
@@ -68,7 +68,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           install-fonts: true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: vhs-fonts
           path: vhs.*
