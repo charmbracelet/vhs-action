@@ -77,8 +77,10 @@ export async function installTtyd(version?: string): Promise<string> {
       }
       core.debug(`MacOS ttyd does not support versioning`)
       await exec.exec('brew', args)
+      const brewPrefixOutput = await exec.getExecOutput('brew', ['--prefix'])
+      const brewPrefix = brewPrefixOutput.stdout.trim()
       const cachePath = await tc.cacheFile(
-        '/usr/local/bin/ttyd',
+        `${brewPrefix}/bin/ttyd`,
         'ttyd',
         'ttyd',
         version

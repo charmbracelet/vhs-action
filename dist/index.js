@@ -115,7 +115,9 @@ function installTtyd(version) {
                 }
                 core.debug(`MacOS ttyd does not support versioning`);
                 yield exec.exec('brew', args);
-                const cachePath = yield tc.cacheFile('/usr/local/bin/ttyd', 'ttyd', 'ttyd', version);
+                const brewPrefixOutput = yield exec.getExecOutput('brew', ['--prefix']);
+                const brewPrefix = brewPrefixOutput.stdout.trim();
+                const cachePath = yield tc.cacheFile(`${brewPrefix}/bin/ttyd`, 'ttyd', 'ttyd', version);
                 return Promise.resolve(path.join(cachePath, 'ttyd'));
             }
             default: {
