@@ -5,6 +5,7 @@ import * as tc from '@actions/tool-cache'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as github from '@actions/github'
+import * as glob from '@actions/glob'
 
 const specialNames = {
   '%assetNameName%': (asset: {name: string}) => path.parse(asset.name).name
@@ -27,7 +28,7 @@ interface GithubFont {
 
 interface GoogleFont {
   name: string
-  staticPath: string[]
+  pattern: string
   isDefault?: boolean
 }
 
@@ -71,23 +72,23 @@ const nerdFonts = [
 const googleFonts: GoogleFont[] = [
   {
     name: 'Source Code Pro',
-    staticPath: ['static']
+    pattern: 'SourceCodePro*.ttf'
   },
   {
     name: 'Inconsolata',
-    staticPath: ['static', 'Inconsolata']
+    pattern: 'Inconsolata*.ttf'
   },
   {
     name: 'Noto Sans Mono',
-    staticPath: ['static', 'NotoSansMono']
+    pattern: 'NotoSansMono*.ttf'
   },
   {
     name: 'Roboto Mono',
-    staticPath: ['static']
+    pattern: 'RobotoMono*.ttf'
   },
   {
     name: 'Ubuntu Mono',
-    staticPath: []
+    pattern: 'UbuntuMono*.ttf'
   }
 ]
 
@@ -278,28 +279,43 @@ async function installNerdFont(font: NerdFont): Promise<void[]> {
   return Promise.reject(new Error(`Could not find ${fontName}`))
 }
 
+let googleFontsPath = ''
+
 async function installGoogleFont(font: GoogleFont): Promise<void[]> {
-  core.info(`Installing ${font.name}`)
-  const fontCacheName = font.name.toLowerCase().replace(/ /g, '-')
-  const escapedName = font.name.replace(/ /g, '%20')
-  let cacheDir = tc.find(fontCacheName, 'latest')
+  const cacheDir = tc.find(font.name, 'latest')
   if (cacheDir) {
     core.info(`Found cached version of ${font.name}`)
     return installFonts(cacheDir)
   }
-  core.info(`Downloading ${font.name}`)
-  const zipPath = await tc.downloadTool(
-    `https://fonts.google.com/download?family=${escapedName}`,
-    '',
-    token
+  if (!googleFontsPath) {
+    core.info('Downloading Google Fonts repository archive')
+    const zipPath = await tc.downloadTool(
+      'https://github.com/google/fonts/archive/refs/heads/main.zip',
+      '',
+      token
+    )
+    googleFontsPath = await tc.extractZip(zipPath)
+  }
+  core.info(`Installing ${font.name}`)
+  const globber = await glob.create(
+    path.join(googleFontsPath, '**', font.pattern)
   )
-  const unzipPath = await tc.extractZip(zipPath)
-  cacheDir = await tc.cacheDir(
-    path.join(unzipPath, ...font.staticPath),
-    fontCacheName,
-    'latest'
+  const files = await globber.glob()
+  const cacheDirs: {[key: string]: string} = {}
+  for (const file of files) {
+    if (!cacheDirs[font.name]) {
+      cacheDirs[font.name] = await tc.cacheDir(
+        path.dirname(file),
+        font.name,
+        'latest'
+      )
+    }
+  }
+  return Promise.all(
+    Object.keys(cacheDirs).map(async key => {
+      await installFonts(cacheDirs[key])
+    })
   )
-  return installFonts(cacheDir)
 }
 
 async function liberation(): Promise<void[]> {
