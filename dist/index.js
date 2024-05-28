@@ -115,7 +115,9 @@ function installTtyd(version) {
                 }
                 core.debug(`MacOS ttyd does not support versioning`);
                 yield exec.exec('brew', args);
-                const cachePath = yield tc.cacheFile('/usr/local/bin/ttyd', 'ttyd', 'ttyd', version);
+                const brewPrefixOutput = yield exec.getExecOutput('brew', ['--prefix']);
+                const brewPrefix = brewPrefixOutput.stdout.trim();
+                const cachePath = yield tc.cacheFile(`${brewPrefix}/bin/ttyd`, 'ttyd', 'ttyd', version);
                 return Promise.resolve(path.join(cachePath, 'ttyd'));
             }
             default: {
@@ -727,7 +729,8 @@ function install(version) {
             }
         }
         let dlUrl;
-        const archiveName = `vhs_${version}_${platform}_${arch}.${ext}`;
+        const dirName = `vhs_${version}_${platform}_${arch}`;
+        const archiveName = `${dirName}.${ext}`;
         core.debug(`Looking for ${archiveName}`);
         for (const asset of release.data.assets) {
             core.debug(`Checking asset ${asset.name}`);
@@ -755,7 +758,7 @@ function install(version) {
         core.debug(`Extracted to ${extPath}`);
         const cachePath = yield tc.cacheDir(extPath, cacheName, version);
         core.debug(`Cached to ${cachePath}`);
-        const binPath = path.join(cachePath, osPlatform == 'win32' ? 'vhs.exe' : 'vhs');
+        const binPath = path.join(cachePath, dirName, osPlatform == 'win32' ? 'vhs.exe' : 'vhs');
         core.debug(`Bin path is ${binPath}`);
         return Promise.resolve(binPath);
     });
