@@ -848,6 +848,8 @@ function run() {
             // Unset the CI variable to prevent Termenv from ignoring terminal ANSI
             // sequences.
             core.exportVariable('CI', '');
+            // GitHub Actions support terminal true colors, so we can enable it.
+            core.exportVariable('COLORTERM', 'truecolor');
             if (filePath) {
                 core.info('Running VHS');
                 yield exec.exec(`${bin} ${filePath}`);
