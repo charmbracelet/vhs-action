@@ -33,6 +33,9 @@ async function run(): Promise<void> {
     // sequences.
     core.exportVariable('CI', '')
 
+    // GitHub Actions support terminal true colors, so we can enable it.
+    core.exportVariable('COLORTERM', 'truecolor')
+
     if (filePath) {
       core.info('Running VHS')
       await exec.exec(`${bin} ${filePath}`)
