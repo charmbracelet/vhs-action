@@ -829,6 +829,7 @@ function run() {
         try {
             const version = core.getInput('version');
             const filePath = core.getInput('path');
+            const publish = core.getInput('publish');
             // Fail fast if file does not exist.
             if (filePath) {
                 if (!fs.existsSync(filePath)) {
@@ -853,6 +854,18 @@ function run() {
             if (filePath) {
                 core.info('Running VHS');
                 yield exec.exec(`${bin} ${filePath}`);
+                if (publish) {
+                    let gifUrl = '';
+                    const options = {
+                        listeners: {
+                            stdout: (data) => {
+                                gifUrl += data.toString();
+                            }
+                        }
+                    };
+                    yield exec.exec(`${bin} publish -q ${filePath}`, [], options);
+                    core.setOutput('gif-url', gifUrl.trim());
+                }
             }
         }
         catch (error) {
