@@ -10,6 +10,7 @@ async function run(): Promise<void> {
   try {
     const version = core.getInput('version')
     const filePath = core.getInput('path')
+    const publish = core.getInput('publish')
 
     // Fail fast if file does not exist.
     if (filePath) {
@@ -39,6 +40,15 @@ async function run(): Promise<void> {
     if (filePath) {
       core.info('Running VHS')
       await exec.exec(`${bin} ${filePath}`)
+
+      if (publish) {
+        let gifUrl = '';
+        const options: exec.ExecOptions = {
+          listeners: { stdout: (data: Buffer) => { gifUrl += data.toString() } }
+        }
+        await exec.exec(`${bin} publish -q ${filePath}`, [], options)
+        core.setOutput('gif-url', gifUrl.trim())
+      }
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

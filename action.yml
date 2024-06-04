@@ -16,6 +16,13 @@ inputs:
   install-fonts:
     description: Install extra fonts
     default: 'false'
+  publish:
+    description:  Publish your GIF to vhs.charm.sh
+    default: 'false'
+
+outputs:
+  gif-url:
+    description: Available when publish input is set to true
 
 runs:
   using: 'node20'
