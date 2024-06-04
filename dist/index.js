@@ -864,7 +864,9 @@ function run() {
                         }
                     };
                     yield exec.exec(`${bin} publish -q ${filePath}`, [], options);
-                    core.setOutput('gif-url', gifUrl.trim());
+                    gifUrl = gifUrl.trim();
+                    core.info(`uploaded GIF URL: ${gifUrl}`);
+                    core.setOutput('gif-url', gifUrl);
                 }
             }
         }
