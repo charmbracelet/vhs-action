@@ -16,13 +16,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
+        id: vhs_step
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: devicons/public-upload-to-imgur@v2.2.2
-        id: imgur_step
-        with:
-          path: vhs.gif
-          client_id: ${{ secrets.IMGUR_CLIENT_ID }}
+          publish: true
       - uses: actions/github-script@v7
         with:
           # This snippet is public-domain, taken from
@@ -50,7 +47,7 @@ jobs:
 
             const {owner, repo} = context.repo;
             const issue_number = context.issue.number;
-            const urls = ${{ steps.imgur_step.outputs.imgur_urls }};
+            const urls = ${{ steps.vhs_step.outputs.gif_url }};
             const body = "VHS tape file ([`vhs.tape`](./vhs.tape)) has changed.\n\n" +
                 `<img src="${urls[0]}" width="600px" />`;
             core.info("Review thread message body:", body);
