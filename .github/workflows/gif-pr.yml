@@ -47,7 +47,7 @@ jobs:
 
             const {owner, repo} = context.repo;
             const issue_number = context.issue.number;
-            const urls = ${{ steps.vhs_step.outputs.gif_url }};
+            const urls = ${{ steps.vhs_step.outputs.gif-url }};
             const body = "VHS tape file ([`vhs.tape`](./vhs.tape)) has changed.\n\n" +
                 `<img src="${urls[0]}" width="600px" />`;
             core.info("Review thread message body:", body);
