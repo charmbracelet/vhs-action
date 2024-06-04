@@ -42,9 +42,13 @@ async function run(): Promise<void> {
       await exec.exec(`${bin} ${filePath}`)
 
       if (publish) {
-        let gifUrl = '';
+        let gifUrl = ''
         const options: exec.ExecOptions = {
-          listeners: { stdout: (data: Buffer) => { gifUrl += data.toString() } }
+          listeners: {
+            stdout: (data: Buffer) => {
+              gifUrl += data.toString()
+            }
+          }
         }
         await exec.exec(`${bin} publish -q ${filePath}`, [], options)
         core.setOutput('gif-url', gifUrl.trim())
