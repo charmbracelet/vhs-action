@@ -41,8 +41,6 @@
 #   Show                            Show the subsequent commands in the output
 
 Output vhs.gif
-Output vhs.mp4
-Output vhs.webm
 
 Set FontSize 46
 Set Width 1200
