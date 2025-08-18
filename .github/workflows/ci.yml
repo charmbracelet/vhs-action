@@ -29,7 +29,7 @@ jobs:
           - macOS-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
@@ -61,7 +61,7 @@ jobs:
     # dependabot-created PRs cant see any secrets, so this workflow wont work anyway https://github.com/dependabot/dependabot-core/issues/3253
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
