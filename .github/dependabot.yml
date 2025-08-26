@@ -13,6 +13,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -26,6 +30,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -39,6 +47,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
     directory: /
@@ -47,3 +59,7 @@ updates:
       day: "monday"
       time: "05:00"
       timezone: "America/New_York"
+    groups:
+      all:
+        patterns:
+          - "*"
