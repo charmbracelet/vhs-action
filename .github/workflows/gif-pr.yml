@@ -23,7 +23,7 @@ jobs:
         with:
           path: vhs.gif
           client_id: ${{ secrets.IMGUR_CLIENT_ID }}
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           # This snippet is public-domain, taken from
           # https://github.com/oprypin/nightly.link/blob/master/.github/workflows/pr-comment.yml
