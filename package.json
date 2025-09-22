@@ -36,7 +36,7 @@
     "@types/node": "^24.4.0",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.43.0",
-    "@vercel/ncc": "^0.38.3",
+    "@vercel/ncc": "^0.38.4",
     "braces": "^3.0.3",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
