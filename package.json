@@ -34,7 +34,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.7.0",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.45.0",
     "@vercel/ncc": "^0.38.4",
     "braces": "^3.0.3",
