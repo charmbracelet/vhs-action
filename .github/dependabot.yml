@@ -13,6 +13,14 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: github.com/charmbracelet/bubbletea/v2
+        versions:
+          - v2.0.0-beta1
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -26,6 +34,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -39,6 +51,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
     directory: /
@@ -47,3 +63,7 @@ updates:
       day: "monday"
       time: "05:00"
       timezone: "America/New_York"
+    groups:
+      all:
+        patterns:
+          - "*"
