@@ -25,16 +25,16 @@
   "author": "Ayman Bagabas",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^2.0.2",
-    "@actions/github": "^7.0.0",
-    "@actions/glob": "^0.5.0",
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0",
+    "@actions/glob": "^0.6.1",
     "@actions/http-client": "^3.0.0",
-    "@actions/tool-cache": "^3.0.0"
+    "@actions/tool-cache": "^4.0.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.0.10",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@types/node": "^25.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.46.1",
     "@vercel/ncc": "^0.38.4",
     "braces": "^3.0.3",
