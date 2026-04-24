@@ -56,6 +56,12 @@ to `true`.
 - Auto-commit latest generated GIF file ([example](./examples/auto-commit.yml))
 - Upload GIF to host and comment generated GIF on a pull request ([example](./examples/comment-pr.yml))
 
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/vhs-action/contribute
+
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
