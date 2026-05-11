@@ -183,6 +183,23 @@ function installTtydBrewHead() {
         return Promise.resolve();
     });
 }
+function pickBtbnAsset(assets, numbered, masterName) {
+    var _a, _b;
+    let best;
+    for (const asset of assets) {
+        const m = asset.name.match(numbered);
+        if (!m)
+            continue;
+        const major = parseInt(m[1], 10);
+        const minor = parseInt(m[2], 10);
+        if (!best ||
+            major > best.major ||
+            (major === best.major && minor > best.minor)) {
+            best = { url: asset.browser_download_url, major, minor };
+        }
+    }
+    return ((_a = best === null || best === void 0 ? void 0 : best.url) !== null && _a !== void 0 ? _a : (_b = assets.find(a => a.name === masterName)) === null || _b === void 0 ? void 0 : _b.browser_download_url);
+}
 function installLatestFfmpeg() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing latest ffmpeg...`);
@@ -209,15 +226,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('linux64-gpl-5.1') &&
-                        asset.name.endsWith('.tar.xz')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
-                }
+                url = pickBtbnAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-linux64-gpl-\1\.\2\.tar\.xz$/, 'ffmpeg-master-latest-linux64-gpl.tar.xz');
                 extract = tc.extractTar;
                 flags.push('xJ', '--strip-components=1');
                 break;
@@ -228,15 +237,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('win64-gpl-5.1') &&
-                        asset.name.endsWith('.zip')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
-                }
+                url = pickBtbnAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$/, 'ffmpeg-master-latest-win64-gpl.zip');
                 extract = tc.extractZip;
                 break;
             }
