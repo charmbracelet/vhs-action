@@ -6,6 +6,9 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import * as httpm from '@actions/http-client'
+import type {components} from '@octokit/openapi-types'
+
+type ReleaseAsset = components['schemas']['release-asset']
 
 export async function install(): Promise<void> {
   core.info(`Installing dependencies...`)
@@ -144,13 +147,8 @@ export async function installTtydBrewHead(): Promise<void> {
   return Promise.resolve()
 }
 
-interface BtbnAsset {
-  name: string
-  browser_download_url: string
-}
-
-function pickBtbnAsset(
-  assets: BtbnAsset[],
+function pickLatestVersionedAsset(
+  assets: ReleaseAsset[],
   numbered: RegExp,
   masterName: string
 ): string | undefined {
@@ -221,7 +219,7 @@ export async function installLatestFfmpeg(): Promise<string> {
         owner: 'BtbN',
         repo: 'FFmpeg-Builds'
       })
-      url = pickBtbnAsset(
+      url = pickLatestVersionedAsset(
         release.data.assets,
         /^ffmpeg-n(\d+)\.(\d+)-latest-linux64-gpl-\1\.\2\.tar\.xz$/,
         'ffmpeg-master-latest-linux64-gpl.tar.xz'
@@ -236,7 +234,7 @@ export async function installLatestFfmpeg(): Promise<string> {
         owner: 'BtbN',
         repo: 'FFmpeg-Builds'
       })
-      url = pickBtbnAsset(
+      url = pickLatestVersionedAsset(
         release.data.assets,
         /^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$/,
         'ffmpeg-master-latest-win64-gpl.zip'

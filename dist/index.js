@@ -183,7 +183,7 @@ function installTtydBrewHead() {
         return Promise.resolve();
     });
 }
-function pickBtbnAsset(assets, numbered, masterName) {
+function pickLatestVersionedAsset(assets, numbered, masterName) {
     var _a, _b;
     let best;
     for (const asset of assets) {
@@ -226,7 +226,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                url = pickBtbnAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-linux64-gpl-\1\.\2\.tar\.xz$/, 'ffmpeg-master-latest-linux64-gpl.tar.xz');
+                url = pickLatestVersionedAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-linux64-gpl-\1\.\2\.tar\.xz$/, 'ffmpeg-master-latest-linux64-gpl.tar.xz');
                 extract = tc.extractTar;
                 flags.push('xJ', '--strip-components=1');
                 break;
@@ -237,7 +237,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                url = pickBtbnAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$/, 'ffmpeg-master-latest-win64-gpl.zip');
+                url = pickLatestVersionedAsset(release.data.assets, /^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$/, 'ffmpeg-master-latest-win64-gpl.zip');
                 extract = tc.extractZip;
                 break;
             }
