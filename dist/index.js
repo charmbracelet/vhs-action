@@ -111,11 +111,17 @@ function installTtyd(version) {
         switch (osPlatform) {
             case 'win32': {
                 url = (_a = release.data.assets.find(asset => asset.name.endsWith('win10.exe') || asset.name.endsWith('win32.exe'))) === null || _a === void 0 ? void 0 : _a.browser_download_url;
+                if (!url) {
+                    return Promise.reject(new Error(describeMissingAsset(`tsl0922/ttyd release ${release.data.tag_name} (win32)`, release.data.assets, ['*.win10.exe', '*.win32.exe'])));
+                }
                 core.debug(`Installing ttyd ${version} on Windows from ${url}`);
                 break;
             }
             case 'linux': {
                 url = (_b = release.data.assets.find(asset => asset.name.endsWith('x86_64'))) === null || _b === void 0 ? void 0 : _b.browser_download_url;
+                if (!url) {
+                    return Promise.reject(new Error(describeMissingAsset(`tsl0922/ttyd release ${release.data.tag_name} (linux)`, release.data.assets, ['*x86_64'])));
+                }
                 core.debug(`Installing ttyd ${version} on Linux from ${url}`);
                 break;
             }
@@ -183,8 +189,38 @@ function installTtydBrewHead() {
         return Promise.resolve();
     });
 }
+function describeMissingAsset(context, assets, patterns) {
+    const found = assets.map(a => a.name);
+    const shown = found.slice(0, 20);
+    const elided = found.length > shown.length ? ` (+${found.length - shown.length} more)` : '';
+    return [
+        `${context}: no release asset matched expected patterns.`,
+        `  Tried: ${patterns.join(', ')}`,
+        `  Found ${found.length} asset(s)${found.length ? `: ${shown.join(', ')}${elided}` : ''}`,
+        `  This usually means the upstream release renamed its artifacts.`,
+        `  Please open an issue at https://github.com/charmbracelet/vhs-action/issues with this log.`
+    ].join('\n');
+}
+function pickLatestVersionedAsset(assets, numbered, masterName) {
+    var _a, _b;
+    let best;
+    for (const asset of assets) {
+        const m = asset.name.match(numbered);
+        if (!m)
+            continue;
+        const major = parseInt(m[1], 10);
+        const minor = parseInt(m[2], 10);
+        if (!best ||
+            major > best.major ||
+            (major === best.major && minor > best.minor)) {
+            best = { url: asset.browser_download_url, major, minor };
+        }
+    }
+    return ((_a = best === null || best === void 0 ? void 0 : best.url) !== null && _a !== void 0 ? _a : (_b = assets.find(a => a.name === masterName)) === null || _b === void 0 ? void 0 : _b.browser_download_url);
+}
 function installLatestFfmpeg() {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e;
         core.info(`Installing latest ffmpeg...`);
         const http = new httpm.HttpClient('vhs-action');
         const osPlatform = os.platform();
@@ -209,15 +245,15 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('linux64-gpl-5.1') &&
-                        asset.name.endsWith('.tar.xz')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
+                core.info(`BtbN/FFmpeg-Builds latest release: ${release.data.tag_name}`);
+                const numbered = /^ffmpeg-n(\d+)\.(\d+)-latest-linux64-gpl-\1\.\2\.tar\.xz$/;
+                const masterName = 'ffmpeg-master-latest-linux64-gpl.tar.xz';
+                const matchedUrl = pickLatestVersionedAsset(release.data.assets, numbered, masterName);
+                if (!matchedUrl) {
+                    return Promise.reject(new Error(describeMissingAsset(`BtbN/FFmpeg-Builds release ${release.data.tag_name} (linux)`, release.data.assets, [numbered.source, masterName])));
                 }
+                core.info(`Selected ffmpeg asset: ${matchedUrl}`);
+                url = matchedUrl;
                 extract = tc.extractTar;
                 flags.push('xJ', '--strip-components=1');
                 break;
@@ -228,25 +264,32 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('win64-gpl-5.1') &&
-                        asset.name.endsWith('.zip')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
+                core.info(`BtbN/FFmpeg-Builds latest release: ${release.data.tag_name}`);
+                const numbered = /^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\1\.\2\.zip$/;
+                const masterName = 'ffmpeg-master-latest-win64-gpl.zip';
+                const matchedUrl = pickLatestVersionedAsset(release.data.assets, numbered, masterName);
+                if (!matchedUrl) {
+                    return Promise.reject(new Error(describeMissingAsset(`BtbN/FFmpeg-Builds release ${release.data.tag_name} (win32)`, release.data.assets, [numbered.source, masterName])));
                 }
+                core.info(`Selected ffmpeg asset: ${matchedUrl}`);
+                url = matchedUrl;
                 extract = tc.extractZip;
                 break;
             }
             case 'darwin': {
                 // Use https://evermeet.cx/ffmpeg/ builds
-                const resp = yield http.getJson('https://evermeet.cx/ffmpeg/info/ffmpeg/release');
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                // version = resp.result!.version
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                url = resp.result.download.zip.url;
+                const endpoint = 'https://evermeet.cx/ffmpeg/info/ffmpeg/release';
+                const resp = yield http.getJson(endpoint);
+                if (resp.statusCode < 200 || resp.statusCode >= 300) {
+                    return Promise.reject(new Error(`evermeet.cx returned HTTP ${resp.statusCode} for ${endpoint}`));
+                }
+                const zipUrl = (_c = (_b = (_a = resp.result) === null || _a === void 0 ? void 0 : _a.download) === null || _b === void 0 ? void 0 : _b.zip) === null || _c === void 0 ? void 0 : _c.url;
+                if (!zipUrl) {
+                    return Promise.reject(new Error(`evermeet.cx response missing download.zip.url. ` +
+                        `Endpoint: ${endpoint}. Got: ${JSON.stringify(resp.result)}`));
+                }
+                core.info(`evermeet ffmpeg ${(_e = (_d = resp.result) === null || _d === void 0 ? void 0 : _d.version) !== null && _e !== void 0 ? _e : '(unknown version)'}: ${zipUrl}`);
+                url = zipUrl;
                 extract = tc.extractZip;
                 break;
             }
@@ -254,24 +297,34 @@ function installLatestFfmpeg() {
                 return Promise.reject(new Error(`Unsupported platform: ${osPlatform}`));
             }
         }
-        if (url) {
-            const dlPath = yield tc.downloadTool(url);
-            core.debug(`Downloaded ffmpeg to ${dlPath}`);
-            const cachePath = yield tc.cacheDir(yield extract(dlPath, '', flags), 'ffmpeg', version);
-            switch (osPlatform) {
-                case 'linux':
-                case 'win32': {
-                    const binDir = path.join(cachePath, 'bin');
-                    core.addPath(binDir);
-                    return Promise.resolve(path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
-                }
-                default: {
-                    core.addPath(cachePath);
-                    return Promise.resolve(path.join(cachePath, 'ffmpeg'));
-                }
+        let dlPath;
+        try {
+            dlPath = yield tc.downloadTool(url);
+        }
+        catch (err) {
+            return Promise.reject(new Error(`Failed to download ffmpeg from ${url}: ${err.message}`));
+        }
+        core.debug(`Downloaded ffmpeg to ${dlPath}`);
+        let extractedDir;
+        try {
+            extractedDir = yield extract(dlPath, '', flags);
+        }
+        catch (err) {
+            return Promise.reject(new Error(`Failed to extract ffmpeg archive ${dlPath} (from ${url}): ${err.message}`));
+        }
+        const cachePath = yield tc.cacheDir(extractedDir, 'ffmpeg', version);
+        switch (osPlatform) {
+            case 'linux':
+            case 'win32': {
+                const binDir = path.join(cachePath, 'bin');
+                core.addPath(binDir);
+                return Promise.resolve(path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
+            }
+            default: {
+                core.addPath(cachePath);
+                return Promise.resolve(path.join(cachePath, 'ffmpeg'));
             }
         }
-        return Promise.reject(new Error('Failed to install ffmpeg'));
     });
 }
 function installFfmpeg() {
