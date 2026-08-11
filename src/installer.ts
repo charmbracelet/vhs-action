@@ -1,4 +1,5 @@
 import * as os from 'os'
+import * as fs from 'fs'
 import * as path from 'path'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
@@ -30,17 +31,6 @@ export async function install(version: string): Promise<string> {
   }
 
   version = release.data.tag_name.replace(/^v/, '')
-
-  // find cached version
-  const cacheDir = tc.find(cacheName, version)
-  if (cacheDir) {
-    core.info(`Found cached version ${version}`)
-    return Promise.resolve(
-      path.join(cacheDir, osPlatform === 'win32' ? 'vhs.exe' : 'vhs')
-    )
-  }
-
-  core.info(`Downloading VHS ${version}...`)
 
   let platform = osPlatform
   let arch = osArch
@@ -77,8 +67,19 @@ export async function install(version: string): Promise<string> {
     }
   }
 
-  let dlUrl: string | undefined
   const dirName = `vhs_${version}_${platform}_${arch}`
+  const exeName = osPlatform === 'win32' ? 'vhs.exe' : 'vhs'
+
+  // find cached version
+  const cacheDir = tc.find(cacheName, version)
+  if (cacheDir) {
+    core.info(`Found cached version ${version}`)
+    return Promise.resolve(resolveVhsBin(cacheDir, dirName, exeName))
+  }
+
+  core.info(`Downloading VHS ${version}...`)
+
+  let dlUrl: string | undefined
   const archiveName = `${dirName}.${ext}`
   core.debug(`Looking for ${archiveName}`)
   for (const asset of release.data.assets) {
@@ -115,12 +116,19 @@ export async function install(version: string): Promise<string> {
   const cachePath: string = await tc.cacheDir(extPath, cacheName, version)
   core.debug(`Cached to ${cachePath}`)
 
-  const binPath: string = path.join(
-    cachePath,
-    dirName,
-    osPlatform == 'win32' ? 'vhs.exe' : 'vhs'
-  )
+  const binPath: string = resolveVhsBin(cachePath, dirName, exeName)
   core.debug(`Bin path is ${binPath}`)
 
   return Promise.resolve(binPath)
+}
+
+// The archives extract into a `vhs_<version>_<os>_<arch>` directory, but older
+// cached versions hold the binary at the root, so check both.
+export function resolveVhsBin(
+  dir: string,
+  dirName: string,
+  exeName: string
+): string {
+  const nested = path.join(dir, dirName, exeName)
+  return fs.existsSync(nested) ? nested : path.join(dir, exeName)
 }

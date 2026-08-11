@@ -52,6 +52,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.install = install;
 exports.installTtyd = installTtyd;
 exports.installTtydBrewHead = installTtydBrewHead;
+exports.findBtbNAsset = findBtbNAsset;
+exports.ffmpegBinDir = ffmpegBinDir;
+exports.resolveFfmpegRoot = resolveFfmpegRoot;
 exports.installLatestFfmpeg = installLatestFfmpeg;
 exports.installFfmpeg = installFfmpeg;
 const os = __importStar(__nccwpck_require__(857));
@@ -183,6 +186,53 @@ function installTtydBrewHead() {
         return Promise.resolve();
     });
 }
+// Pick a static GPL build from a BtbN/FFmpeg-Builds release. Assets are named
+// ffmpeg-<branch>-latest-<os><arch>-<license>[-shared][-<ver>].<ext>, e.g.
+// ffmpeg-master-latest-linux64-gpl.tar.xz or
+// ffmpeg-n7.1-latest-linuxarm64-gpl-7.1.tar.xz.
+// Prefer the master build, fall back to the highest versioned branch, so the
+// action keeps working as branches are added and dropped upstream.
+function findBtbNAsset(assets, osName, ext) {
+    const arch = os.arch() === 'arm64' ? 'arm64' : '64';
+    const target = `${osName}${arch}-gpl`;
+    const candidates = assets.filter(asset => asset.name.startsWith('ffmpeg-') &&
+        asset.name.includes(`-${target}`) &&
+        !asset.name.includes('-shared') &&
+        asset.name.endsWith(ext));
+    if (candidates.length === 0) {
+        return undefined;
+    }
+    const master = candidates.find(asset => asset.name.startsWith('ffmpeg-master'));
+    if (master) {
+        return master.browser_download_url;
+    }
+    // Sort by branch version descending, e.g. n8.1 before n7.1.
+    const branchVersion = (name) => {
+        const match = name.match(/^ffmpeg-n(\d+)\.(\d+)/);
+        return match ? Number(match[1]) * 1000 + Number(match[2]) : 0;
+    };
+    candidates.sort((a, b) => branchVersion(b.name) - branchVersion(a.name));
+    return candidates[0].browser_download_url;
+}
+// Directory holding the ffmpeg binaries, which is `bin` for the BtbN builds and
+// the extracted directory itself for the macOS builds.
+function ffmpegBinDir(dir) {
+    const binDir = path.join(dir, 'bin');
+    return fs.existsSync(binDir) ? binDir : dir;
+}
+// Some archives extract into a single top level directory instead of the
+// binaries directly, so descend into it when that is the case.
+function resolveFfmpegRoot(dir) {
+    if (fs.existsSync(path.join(dir, 'bin'))) {
+        return dir;
+    }
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const dirs = entries.filter(entry => entry.isDirectory());
+    if (entries.length === 1 && dirs.length === 1) {
+        return path.join(dir, dirs[0].name);
+    }
+    return dir;
+}
 function installLatestFfmpeg() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Installing latest ffmpeg...`);
@@ -193,7 +243,7 @@ function installLatestFfmpeg() {
         const cacheDir = tc.find('ffmpeg', 'latest');
         if (cacheDir) {
             core.info(`Found cached version latest`);
-            const binPath = path.join(cacheDir, osPlatform === 'win32' ? 'bin' : '');
+            const binPath = ffmpegBinDir(cacheDir);
             core.addPath(binPath);
             return Promise.resolve(path.join(binPath, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
         }
@@ -209,15 +259,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('linux64-gpl-5.1') &&
-                        asset.name.endsWith('.tar.xz')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
-                }
+                url = findBtbNAsset(release.data.assets, 'linux', '.tar.xz');
                 extract = tc.extractTar;
                 flags.push('xJ', '--strip-components=1');
                 break;
@@ -228,15 +270,7 @@ function installLatestFfmpeg() {
                     owner: 'BtbN',
                     repo: 'FFmpeg-Builds'
                 });
-                for (const asset of release.data.assets) {
-                    // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-                    if (asset.name.startsWith('ffmpeg-n5.1') &&
-                        asset.name.includes('win64-gpl-5.1') &&
-                        asset.name.endsWith('.zip')) {
-                        url = asset.browser_download_url;
-                        break;
-                    }
-                }
+                url = findBtbNAsset(release.data.assets, 'win', '.zip');
                 extract = tc.extractZip;
                 break;
             }
@@ -257,19 +291,13 @@ function installLatestFfmpeg() {
         if (url) {
             const dlPath = yield tc.downloadTool(url);
             core.debug(`Downloaded ffmpeg to ${dlPath}`);
-            const cachePath = yield tc.cacheDir(yield extract(dlPath, '', flags), 'ffmpeg', version);
-            switch (osPlatform) {
-                case 'linux':
-                case 'win32': {
-                    const binDir = path.join(cachePath, 'bin');
-                    core.addPath(binDir);
-                    return Promise.resolve(path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
-                }
-                default: {
-                    core.addPath(cachePath);
-                    return Promise.resolve(path.join(cachePath, 'ffmpeg'));
-                }
-            }
+            const cachePath = yield tc.cacheDir(
+            // The zip builds are not stripped like the tarballs, so the binaries can
+            // sit one directory deeper than the archive root.
+            resolveFfmpegRoot(yield extract(dlPath, '', flags)), 'ffmpeg', version);
+            const binDir = ffmpegBinDir(cachePath);
+            core.addPath(binDir);
+            return Promise.resolve(path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`));
         }
         return Promise.reject(new Error('Failed to install ffmpeg'));
     });
@@ -696,7 +724,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.install = install;
+exports.resolveVhsBin = resolveVhsBin;
 const os = __importStar(__nccwpck_require__(857));
+const fs = __importStar(__nccwpck_require__(9896));
 const path = __importStar(__nccwpck_require__(6928));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
@@ -726,13 +756,6 @@ function install(version) {
             });
         }
         version = release.data.tag_name.replace(/^v/, '');
-        // find cached version
-        const cacheDir = tc.find(cacheName, version);
-        if (cacheDir) {
-            core.info(`Found cached version ${version}`);
-            return Promise.resolve(path.join(cacheDir, osPlatform === 'win32' ? 'vhs.exe' : 'vhs'));
-        }
-        core.info(`Downloading VHS ${version}...`);
         let platform = osPlatform;
         let arch = osArch;
         let ext = 'tar.gz';
@@ -767,8 +790,16 @@ function install(version) {
                 break;
             }
         }
-        let dlUrl;
         const dirName = `vhs_${version}_${platform}_${arch}`;
+        const exeName = osPlatform === 'win32' ? 'vhs.exe' : 'vhs';
+        // find cached version
+        const cacheDir = tc.find(cacheName, version);
+        if (cacheDir) {
+            core.info(`Found cached version ${version}`);
+            return Promise.resolve(resolveVhsBin(cacheDir, dirName, exeName));
+        }
+        core.info(`Downloading VHS ${version}...`);
+        let dlUrl;
         const archiveName = `${dirName}.${ext}`;
         core.debug(`Looking for ${archiveName}`);
         for (const asset of release.data.assets) {
@@ -797,10 +828,16 @@ function install(version) {
         core.debug(`Extracted to ${extPath}`);
         const cachePath = yield tc.cacheDir(extPath, cacheName, version);
         core.debug(`Cached to ${cachePath}`);
-        const binPath = path.join(cachePath, dirName, osPlatform == 'win32' ? 'vhs.exe' : 'vhs');
+        const binPath = resolveVhsBin(cachePath, dirName, exeName);
         core.debug(`Bin path is ${binPath}`);
         return Promise.resolve(binPath);
     });
+}
+// The archives extract into a `vhs_<version>_<os>_<arch>` directory, but older
+// cached versions hold the binary at the root, so check both.
+function resolveVhsBin(dir, dirName, exeName) {
+    const nested = path.join(dir, dirName, exeName);
+    return fs.existsSync(nested) ? nested : path.join(dir, exeName);
 }
 
 

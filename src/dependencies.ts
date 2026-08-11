@@ -158,6 +158,73 @@ interface FfmpegMacOs {
   }
 }
 
+interface ReleaseAsset {
+  name: string
+  browser_download_url: string
+}
+
+// Pick a static GPL build from a BtbN/FFmpeg-Builds release. Assets are named
+// ffmpeg-<branch>-latest-<os><arch>-<license>[-shared][-<ver>].<ext>, e.g.
+// ffmpeg-master-latest-linux64-gpl.tar.xz or
+// ffmpeg-n7.1-latest-linuxarm64-gpl-7.1.tar.xz.
+// Prefer the master build, fall back to the highest versioned branch, so the
+// action keeps working as branches are added and dropped upstream.
+export function findBtbNAsset(
+  assets: ReleaseAsset[],
+  osName: 'linux' | 'win',
+  ext: string
+): string | undefined {
+  const arch = os.arch() === 'arm64' ? 'arm64' : '64'
+  const target = `${osName}${arch}-gpl`
+
+  const candidates = assets.filter(
+    asset =>
+      asset.name.startsWith('ffmpeg-') &&
+      asset.name.includes(`-${target}`) &&
+      !asset.name.includes('-shared') &&
+      asset.name.endsWith(ext)
+  )
+  if (candidates.length === 0) {
+    return undefined
+  }
+
+  const master = candidates.find(asset =>
+    asset.name.startsWith('ffmpeg-master')
+  )
+  if (master) {
+    return master.browser_download_url
+  }
+
+  // Sort by branch version descending, e.g. n8.1 before n7.1.
+  const branchVersion = (name: string): number => {
+    const match = name.match(/^ffmpeg-n(\d+)\.(\d+)/)
+    return match ? Number(match[1]) * 1000 + Number(match[2]) : 0
+  }
+  candidates.sort((a, b) => branchVersion(b.name) - branchVersion(a.name))
+  return candidates[0].browser_download_url
+}
+
+// Directory holding the ffmpeg binaries, which is `bin` for the BtbN builds and
+// the extracted directory itself for the macOS builds.
+export function ffmpegBinDir(dir: string): string {
+  const binDir = path.join(dir, 'bin')
+  return fs.existsSync(binDir) ? binDir : dir
+}
+
+// Some archives extract into a single top level directory instead of the
+// binaries directly, so descend into it when that is the case.
+export function resolveFfmpegRoot(dir: string): string {
+  if (fs.existsSync(path.join(dir, 'bin'))) {
+    return dir
+  }
+  const entries = fs.readdirSync(dir, {withFileTypes: true})
+  const dirs = entries.filter(entry => entry.isDirectory())
+  if (entries.length === 1 && dirs.length === 1) {
+    return path.join(dir, dirs[0].name)
+  }
+  return dir
+}
+
 export async function installLatestFfmpeg(): Promise<string> {
   core.info(`Installing latest ffmpeg...`)
 
@@ -168,7 +235,7 @@ export async function installLatestFfmpeg(): Promise<string> {
   const cacheDir = tc.find('ffmpeg', 'latest')
   if (cacheDir) {
     core.info(`Found cached version latest`)
-    const binPath = path.join(cacheDir, osPlatform === 'win32' ? 'bin' : '')
+    const binPath = ffmpegBinDir(cacheDir)
     core.addPath(binPath)
     return Promise.resolve(
       path.join(binPath, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`)
@@ -192,17 +259,7 @@ export async function installLatestFfmpeg(): Promise<string> {
         owner: 'BtbN',
         repo: 'FFmpeg-Builds'
       })
-      for (const asset of release.data.assets) {
-        // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-        if (
-          asset.name.startsWith('ffmpeg-n5.1') &&
-          asset.name.includes('linux64-gpl-5.1') &&
-          asset.name.endsWith('.tar.xz')
-        ) {
-          url = asset.browser_download_url
-          break
-        }
-      }
+      url = findBtbNAsset(release.data.assets, 'linux', '.tar.xz')
       extract = tc.extractTar
       flags.push('xJ', '--strip-components=1')
       break
@@ -213,17 +270,7 @@ export async function installLatestFfmpeg(): Promise<string> {
         owner: 'BtbN',
         repo: 'FFmpeg-Builds'
       })
-      for (const asset of release.data.assets) {
-        // ffmpeg-n5.1-latest-linux64-gpl-5.1.tar.xz
-        if (
-          asset.name.startsWith('ffmpeg-n5.1') &&
-          asset.name.includes('win64-gpl-5.1') &&
-          asset.name.endsWith('.zip')
-        ) {
-          url = asset.browser_download_url
-          break
-        }
-      }
+      url = findBtbNAsset(release.data.assets, 'win', '.zip')
       extract = tc.extractZip
       break
     }
@@ -248,24 +295,17 @@ export async function installLatestFfmpeg(): Promise<string> {
     const dlPath = await tc.downloadTool(url)
     core.debug(`Downloaded ffmpeg to ${dlPath}`)
     const cachePath = await tc.cacheDir(
-      await extract(dlPath, '', flags),
+      // The zip builds are not stripped like the tarballs, so the binaries can
+      // sit one directory deeper than the archive root.
+      resolveFfmpegRoot(await extract(dlPath, '', flags)),
       'ffmpeg',
       version
     )
-    switch (osPlatform) {
-      case 'linux':
-      case 'win32': {
-        const binDir = path.join(cachePath, 'bin')
-        core.addPath(binDir)
-        return Promise.resolve(
-          path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`)
-        )
-      }
-      default: {
-        core.addPath(cachePath)
-        return Promise.resolve(path.join(cachePath, 'ffmpeg'))
-      }
-    }
+    const binDir = ffmpegBinDir(cachePath)
+    core.addPath(binDir)
+    return Promise.resolve(
+      path.join(binDir, `ffmpeg${osPlatform === 'win32' ? '.exe' : ''}`)
+    )
   }
 
   return Promise.reject(new Error('Failed to install ffmpeg'))
